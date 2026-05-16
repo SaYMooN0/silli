@@ -1,0 +1,5 @@
+package Lexer
+
+class StringLiteral {
+
+}
