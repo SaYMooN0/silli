@@ -1,41 +1,100 @@
 package Lexer
 
-import java.io.{Reader, StringReader}
-
-class Lexer(reader: Reader) {
-  private val ctx: LexerCtx =
-    LexerCtx(reader.readNextInputChar(), reader.readNextInputChar(), reader)
-  private var currentPos: Pos = Pos(1, 1);
-
-  private def advanceInSameLine(token: Token, tokenLen: Int): TokenWithLoc = {
-    val tokenStartP = this.currentPos;
-    val tokenEndP = Pos(this.currentPos.line, this.currentPos.column + tokenLen);
-    val loc = Loc(tokenStartP, tokenEndP)
-
-    this.currentPos = tokenEndP;
-    (token, loc)
-  }
-
-  private def advanceWith1CharToken(token: Token): TokenWithLoc =
-    advanceInSameLine(token, 1)
-
-
-  def readNext(): TokenWithLoc | UnexpectedCharErr | EndOfReaderReached.type =
-    (ctx.current, ctx.next) match {
-      case (EOF, _) => EndOfReaderReached
-      case (':', '=') => advanceInSameLine(SimpleToken.Assign, 2)
-      case (':', _) => advanceInSameLine(SimpleToken.Colon, 1)
-      case (a: Char, b) => UnexpectedCharErr(a, b)
-    }
-}
+import java.io.StringReader
+import scala.annotation.tailrec
 
 object Lexer {
-  def lexerForString(str: String): Lexer = {
+  private def advanceInSameLine(ctx: ReadingCtx, token: Token, tokenLen: Int): (ReadingCtx, TokenWithLoc[_]) = {
+    val tokenEndPos = Pos(
+      ctx.currentPos.line,
+      ctx.currentPos.column + tokenLen
+    );
+    val loc = Loc(ctx.currentPos, tokenEndPos)
+
+    val newCtx = ctx.copy(currentPos = tokenEndPos)
+    (newCtx, TokenWithLoc(token, loc))
+  }
+
+  private def skipTillRightCurly(openingCurlyPos: Pos, ctx: ReadingCtx): Either[
+    (TokenizingErr.UnclosedComment, ReadingCtx),
+    ReadingCtx
+  ] = {
+    ctx.current match {
+      case EOF => Left(TokenizingErr.UnclosedComment(openingCurlyPos), ctx)
+      case '}' => Right(ctx.advanceInSameLine())
+      case '\n' => skipTillRightCurly(openingCurlyPos, ctx.advanceToNewLine())
+      case _ => skipTillRightCurly(openingCurlyPos, ctx.advanceInSameLine())
+    }
+  }
+
+  private def readNext(ctx: ReadingCtx): (ReadingCtx, TokenWithLoc[_] | TokenizingErr | EndOfReaderReached.type) =
+    (ctx.current, ctx.next) match {
+
+      case (EOF, _) => (ctx, EndOfReaderReached)
+      case ('\n', _) => readNext(ctx.advanceToNewLine())
+      case (' ', _) => readNext(ctx.advanceInSameLine())
+
+      case (':', '=') => advanceInSameLine(ctx, SimpleToken.Assign, 2)
+      case ('<', '>') => advanceInSameLine(ctx, OpToken.NotEqual, 2)
+      case ('<', '=') => advanceInSameLine(ctx, OpToken.LessOrEqual, 2)
+      case ('<', '=') => advanceInSameLine(ctx, OpToken.GreaterOrEqual, 2)
+
+
+      case (':', _) => advanceInSameLine(ctx, SimpleToken.Colon, 1)
+      case (';', _) => advanceInSameLine(ctx, SimpleToken.SemiColon, 1)
+      case ('.', _) => advanceInSameLine(ctx, SimpleToken.Dot, 1)
+      case (',', _) => advanceInSameLine(ctx, SimpleToken.Comma, 1)
+      case ('(', _) => advanceInSameLine(ctx, SimpleToken.LPar, 1)
+      case (')', _) => advanceInSameLine(ctx, SimpleToken.RPar, 1)
+      case ('+', _) => advanceInSameLine(ctx, OpToken.Plus, 1)
+      case ('-', _) => advanceInSameLine(ctx, OpToken.Minus, 1)
+      case ('*', _) => advanceInSameLine(ctx, OpToken.Mul, 1)
+      case ('/', _) => advanceInSameLine(ctx, OpToken.RealDiv, 1)
+      case ('=', _) => advanceInSameLine(ctx, OpToken.Equal, 1)
+      case ('<', _) => advanceInSameLine(ctx, OpToken.Less, 1)
+      case ('>', _) => advanceInSameLine(ctx, OpToken.Greater, 1)
+      case ('{', _) => skipTillRightCurly(ctx.currentPos, ctx.advanceInSameLine()) match {
+        case Left(err, newCtx) => (newCtx, err)
+        case Right(newCtx) => readNext(newCtx)
+      }
+
+      case ('"', _) => StringLiteralReader.startFromQuote(ctx) match {
+        case (newCtx, Left(err)) => (newCtx, TokenizingErr.StringLiteralErr(err))
+        case (newCtx, Right(lit)) => (newCtx, lit)
+      }
+
+      case (a: Char, b) => oneCharTokenMap.get(a) match {
+        case Some(token) => advanceInSameLine(ctx, token, 1)
+        case None => (ctx, TokenizingErr.UnexpectedCharErr(a, b))
+      }
+    }
+
+  def printAllTokens(str: String): Unit = {
     val reader = new StringReader(str)
-    new Lexer(reader)
+
+    val curCh = reader.readNextInputChar()
+    val nxtCh = reader.readNextInputChar()
+
+    val startCtx = ReadingCtx(curCh, nxtCh, reader, Pos(1, 1))
+
+    def printTokenAndContinueIfNotEnd(ctx: ReadingCtx): Unit = {
+      val (newCtx, tokenRes) = readNext(ctx)
+      println(tokenRes)
+      tokenRes match {
+        case EndOfReaderReached => ()
+        case e: TokenizingErr => throw new Error(s"$e")
+        case _ => printTokenAndContinueIfNotEnd(newCtx)
+      }
+    }
+
+    printTokenAndContinueIfNotEnd(startCtx)
   }
 }
 
-class UnexpectedCharErr(char: Char, next: ReaderChar);
+enum TokenizingErr {
+  case UnexpectedCharErr(char: Char, charPos: Pos, nextChar: ReaderChar)
+  case UnclosedComment(openPos: Pos)
+  case StringLiteralErr(e: StringLiteralReaderErr)
+}
 
 object EndOfReaderReached;

@@ -3,7 +3,8 @@ package Lexer
 import TypeSystem.TypeSpec
 
 
-type TokenWithLoc = (Token, Loc)
+final case class TokenWithLoc[+T <: Token](token: T, loc: Loc)
+
 type Token =
   BoolLiteralToken
     | IntegerNumLiteralToken
@@ -56,7 +57,7 @@ enum OpToken {
   // comparison
   case Equal // =
   case NotEqual // <>
-  case Less // <
+  case Less // <  
   case LessOrEqual // <=
   case Greater // >
   case GreaterOrEqual // >=

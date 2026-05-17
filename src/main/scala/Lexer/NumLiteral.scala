@@ -1,5 +1,0 @@
-package Lexer
-
-class NumLiteral {
-
-}
