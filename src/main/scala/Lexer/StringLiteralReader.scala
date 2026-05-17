@@ -8,22 +8,20 @@ enum StringLiteralReaderErr {
 object StringLiteralReader {
   private case class StringLiteralReadingCtx(capRev: List[Char], openQuotePos: Pos, readingCtx: ReadingCtx)
 
-  def startFromQuote(ctx: ReadingCtx): (ReadingCtx, Either[StringLiteralReaderErr, TokenWithLoc[StringLiteralToken]]) = {
-    val stringLiteralReadingCtx = StringLiteralReadingCtx(List(), ctx.currentPos, ctx);
+  def readFromQuote(ctx: ReadingCtx): (ReadingCtx, Either[StringLiteralReaderErr, TokenWithLoc[StringLiteralToken]]) = {
+    val stringLiteralReadingCtx = StringLiteralReadingCtx(List(), ctx.currentPos, ctx.advanceInSameLine());
     continueLiteralTillOut(stringLiteralReadingCtx)
   }
 
   private def continueLiteralTillOut(ctx: StringLiteralReadingCtx):
-  (ReadingCtx, Either[
-    StringLiteralReaderErr,
-    TokenWithLoc[StringLiteralToken]
-  ]) = {
+  (ReadingCtx, Either[StringLiteralReaderErr, TokenWithLoc[StringLiteralToken]])
+  = {
     (ctx.readingCtx.current, ctx.readingCtx.next) match {
       case (EOF, _) => (ctx.readingCtx, Left(StringLiteralReaderErr.UnclosedStringLiteral(ctx.openQuotePos, ctx.readingCtx.currentPos)))
       case ('\n', _) => (ctx.readingCtx, Left(StringLiteralReaderErr.UnclosedStringLiteral(ctx.openQuotePos, ctx.readingCtx.currentPos)))
       case ('"', _) => {
         val litVal = StringLiteralToken(ctx.capRev.reverse.mkString)
-        
+
         val readingCtxOnOut = ctx.readingCtx.advanceInSameLine()
         val loc = Loc(start = ctx.openQuotePos, end = readingCtxOnOut.currentPos)
         (readingCtxOnOut, Right(TokenWithLoc(litVal, loc)))

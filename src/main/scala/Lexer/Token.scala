@@ -14,7 +14,7 @@ type Token =
     | IdentToken
     | SimpleToken
     | OpToken
-    | SyntaxKeyWordToken
+    | SyntaxKeywordToken
 
 
 enum BoolLiteralToken {
@@ -22,11 +22,9 @@ enum BoolLiteralToken {
   case False;
 }
 
-class IntegerNumLiteralToken(value: Int)
-
-class RealNumLiteralToken(value: Double)
-
-class StringLiteralToken(value: String)
+final case class IntegerNumLiteralToken(value: Int)
+final case class RealNumLiteralToken(value: Double)
+final case class StringLiteralToken(value: String)
 
 class TypeNameToken(typeSpec: TypeSpec)
 
@@ -68,7 +66,7 @@ enum OpToken {
   case Xor
 }
 
-enum SyntaxKeyWordToken {
+enum SyntaxKeywordToken {
   case End
   case Begin
   case Var
@@ -79,3 +77,40 @@ enum SyntaxKeyWordToken {
   case Else
 }
 
+type Keyword =
+  OpToken.Div.type
+    | OpToken.Not.type
+    | OpToken.And.type
+    | OpToken.Or.type
+    | OpToken.Xor.type
+    | SyntaxKeywordToken
+    | TypeNameToken
+    | BoolLiteralToken
+
+def mapToKeyword(str: String): Option[Keyword] = str match {
+  //OpToken
+  case "div" => Some(OpToken.Div)
+  case "not" => Some(OpToken.Not)
+  case "and" => Some(OpToken.And)
+  case "or" => Some(OpToken.Or)
+  case "xor" => Some(OpToken.Xor)
+  //SyntaxKeywordToken
+  case "end" => Some(SyntaxKeywordToken.End)
+  case "begin" => Some(SyntaxKeywordToken.Begin)
+  case "var" => Some(SyntaxKeywordToken.Var)
+  case "program" => Some(SyntaxKeywordToken.Program)
+  case "procedure" => Some(SyntaxKeywordToken.Procedure)
+  case "if" => Some(SyntaxKeywordToken.If)
+  case "then" => Some(SyntaxKeywordToken.Then)
+  case "else" => Some(SyntaxKeywordToken.Else)
+  //TypeNameToken
+  case TypeSpec.IntegerT.name => Some(TypeNameToken(TypeSpec.IntegerT))
+  case TypeSpec.RealT.name => Some(TypeNameToken(TypeSpec.RealT))
+  case TypeSpec.BooleanT.name => Some(TypeNameToken(TypeSpec.BooleanT))
+  case TypeSpec.StringT.name => Some(TypeNameToken(TypeSpec.StringT))
+  //BoolLiteralToken
+  case "true" => Some(BoolLiteralToken.True)
+  case "false" => Some(BoolLiteralToken.False)
+  //else
+  case _ => None
+}

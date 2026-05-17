@@ -1,17 +1,13 @@
 package Lexer
 
 import java.io.StringReader
-import scala.annotation.tailrec
 
 object Lexer {
   private def advanceInSameLine(ctx: ReadingCtx, token: Token, tokenLen: Int): (ReadingCtx, TokenWithLoc[_]) = {
-    val tokenEndPos = Pos(
-      ctx.currentPos.line,
-      ctx.currentPos.column + tokenLen
-    );
-    val loc = Loc(ctx.currentPos, tokenEndPos)
+    val tokenStartPos = ctx.currentPos
+    val newCtx = ctx.advanceByInSameLine(tokenLen)
+    val loc = Loc(tokenStartPos, newCtx.currentPos)
 
-    val newCtx = ctx.copy(currentPos = tokenEndPos)
     (newCtx, TokenWithLoc(token, loc))
   }
 
@@ -37,7 +33,7 @@ object Lexer {
       case (':', '=') => advanceInSameLine(ctx, SimpleToken.Assign, 2)
       case ('<', '>') => advanceInSameLine(ctx, OpToken.NotEqual, 2)
       case ('<', '=') => advanceInSameLine(ctx, OpToken.LessOrEqual, 2)
-      case ('<', '=') => advanceInSameLine(ctx, OpToken.GreaterOrEqual, 2)
+      case ('>', '=') => advanceInSameLine(ctx, OpToken.GreaterOrEqual, 2)
 
 
       case (':', _) => advanceInSameLine(ctx, SimpleToken.Colon, 1)
@@ -58,15 +54,17 @@ object Lexer {
         case Right(newCtx) => readNext(newCtx)
       }
 
-      case ('"', _) => StringLiteralReader.startFromQuote(ctx) match {
+      case ('"', _) => StringLiteralReader.readFromQuote(ctx) match {
         case (newCtx, Left(err)) => (newCtx, TokenizingErr.StringLiteralErr(err))
         case (newCtx, Right(lit)) => (newCtx, lit)
       }
 
-      case (a: Char, b) => oneCharTokenMap.get(a) match {
-        case Some(token) => advanceInSameLine(ctx, token, 1)
-        case None => (ctx, TokenizingErr.UnexpectedCharErr(a, b))
+      case (a: Char, b) if (a.isDigit) => NumLiteralReader.readFromFirstDigit(a, ctx) match {
+        case (newCtx, Left(err)) => (newCtx, TokenizingErr.NumLiteralErr(err))
+        case (newCtx, Right(token)) => (newCtx, token)
       }
+      case (a: Char, b) if IdentAndKeywordReader.isCharCorrectIdentStarter(a) => IdentAndKeywordReader.readFromFirstChar(a, ctx)
+      case (a: Char, b) => (ctx, TokenizingErr.UnexpectedCharErr(a, ctx.currentPos, b))
     }
 
   def printAllTokens(str: String): Unit = {
@@ -95,6 +93,7 @@ enum TokenizingErr {
   case UnexpectedCharErr(char: Char, charPos: Pos, nextChar: ReaderChar)
   case UnclosedComment(openPos: Pos)
   case StringLiteralErr(e: StringLiteralReaderErr)
+  case NumLiteralErr(e: NumLiteralReaderErr)
 }
 
 object EndOfReaderReached;

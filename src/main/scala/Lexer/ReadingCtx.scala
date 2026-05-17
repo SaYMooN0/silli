@@ -17,11 +17,11 @@ final case class Loc(start: Pos, end: Pos) {
 
 
 private[Lexer] final case class ReadingCtx(
-                                          current: ReaderChar,
-                                          next: ReaderChar,
-                                          reader: Reader,
-                                          currentPos: Pos
-                                        ) {
+                                            current: ReaderChar,
+                                            next: ReaderChar,
+                                            reader: Reader,
+                                            currentPos: Pos
+                                          ) {
   def advanceInSameLine(): ReadingCtx =
     ReadingCtx(
       current = this.next,
@@ -30,6 +30,14 @@ private[Lexer] final case class ReadingCtx(
       currentPos = currentPos.advanceInSameLine()
     )
 
+  def advanceByInSameLine(count: Int): ReadingCtx = {
+    require(count >= 0, "count must be >= 0")
+
+    (0 until count).foldLeft(this) { (acc, _) =>
+      acc.advanceInSameLine()
+    }
+  }
+
   def advanceToNewLine(): ReadingCtx =
     ReadingCtx(
       current = this.next,
@@ -37,4 +45,5 @@ private[Lexer] final case class ReadingCtx(
       reader = this.reader,
       currentPos = currentPos.goToNextLine()
     )
+
 }

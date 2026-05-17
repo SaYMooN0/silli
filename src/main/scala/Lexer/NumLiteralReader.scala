@@ -1,102 +1,58 @@
-//package Lexer
-//
-//object NumLiteralReader {
-//  private class NumLiteralReaderCtx(
-//                                     val capRev: List[Char],
-//                                     val literalStartPos: Pos,
-//                                     val dotAdded: Boolean,
-//                                     val lexerCtx: ReadingCtx
-//                                   )
-//
-//  private type NumLiteral = IntegerNumLiteralToken | RealNumLiteralToken
-//
-//  enum NumLiteralReadingError {
-//    case CouldNotTransform
-//  }
-//
-//  private def constructLiteralOnOut(
-//                                     ctx: NumLiteralReaderCtx
-//                                   ): Either[NumLiteralReadingError, (NumLiteral, Loc, ReadingCtx)] = {
-//
-//    val numInStr = ctx.capRev.reverse.mkString
-//
-//    val loc = Loc(
-//      start = ctx.literalStartPos,
-//      end = ctx.lexerCtx.current
-//    )
-//
-//    if (ctx.dotAdded) {
-//      numInStr.toDoubleOption match {
-//        case Some(value) =>
-//          Right((RealNumLiteralToken(value), loc, ctx.lexerCtx))
-//
-//        case None =>
-//          Left(NumLiteralReadingError.CouldNotTransform)
-//      }
-//    } else {
-//      numInStr.toIntOption match {
-//        case Some(value) =>
-//          Right((IntegerNumLiteralToken(value), loc, ctx.lexerCtx))
-//
-//        case None =>
-//          Left(NumLiteralReadingError.CouldNotTransform)
-//      }
-//    }
-//  }
-//}
-//
-//  /*
-//  * let private constructLiteralOnOut ctx : Result<NumLiteral * Loc * TokenizingCtx, string> =
-//        let numInStr = ctx.capRev |> List.rev |> List.toArray |> String
-//
-//        let loc =
-//            { startP = ctx.literalStartPos
-//              endP = ctx.tokenizingCtx.currentPos }
-//
-//        if ctx.dotAdded then
-//            match Double.TryParse numInStr with
-//            | true, v -> Ok(NumLiteral.Real(v), loc, ctx.tokenizingCtx)
-//            | false, _ -> Error numInStr
-//        else
-//            match Int32.TryParse numInStr with
-//            | true, v -> Ok(NumLiteral.Integer(v), loc, ctx.tokenizingCtx)
-//            | false, _ -> Error numInStr
-//
-//    let private advanceWithNewDigit (ctx) (digitCh) =
-//        { ctx with
-//            capRev = digitCh :: ctx.capRev
-//            tokenizingCtx = TokenizingCtx.advance ctx.tokenizingCtx }
-//
-//    let private advanceWithDot (ctx) =
-//        { ctx with
-//            capRev = '.' :: ctx.capRev
-//            dotAdded = true
-//            tokenizingCtx = TokenizingCtx.advance ctx.tokenizingCtx }
-//
-//    let rec private continueLiteralTillOut (ctx: NumberExtractingCtx) =
-//        let curCharClass = getCharClass ctx.tokenizingCtx.currentChar
-//
-//        match curCharClass, ctx.dotAdded with
-//        | CharClass.Other digit, _ when Char.IsDigit digit -> continueLiteralTillOut (advanceWithNewDigit ctx digit)
-//        | CharClass.Dot, false -> continueLiteralTillOut (advanceWithDot ctx)
-//        // else
-//        | _, _ -> constructLiteralOnOut ctx
-//
-//    let readNumLiteral (firstChar: char) (ctx) =
-//        if not (Char.IsDigit firstChar) then
-//            failwith "Num token must start with a digit"
-//        else
-//            let numLitCtx =
-//                { capRev = [ firstChar ]
-//                  literalStartPos = ctx.currentPos
-//                  dotAdded = false
-//                  tokenizingCtx = TokenizingCtx.advance ctx }
-//
-//            let res = continueLiteralTillOut numLitCtx
-//
-//            match res with
-//            | Ok ok -> ok
-//            | Error numInStr -> failwith $"Could not transform {numInStr} into {nameof NumLiteral}"
-//  * 
-//  * */
-//}
+package Lexer
+
+
+enum NumLiteralReaderErr {
+  case UnableToParse(stringValue: String, loc: Loc)
+}
+
+object NumLiteralReader {
+  private case class NumLiteralReadingCtx(capRev: List[Char], literalStartPos: Pos, readingCtx: ReadingCtx)
+
+  private type NumLiteral = IntegerNumLiteralToken | RealNumLiteralToken;
+
+  def readFromFirstDigit(firstDigit: Char, ctx: ReadingCtx): (
+    ReadingCtx, Either[NumLiteralReaderErr, TokenWithLoc[NumLiteral]])
+  = {
+    if (!firstDigit.isDigit) throw new Error(s"'$firstDigit' passed to the NumLiteralReader must be a digit")
+    val literalReadingCtx = NumLiteralReadingCtx(List(firstDigit), ctx.currentPos, ctx.advanceInSameLine());
+    continueNumLiteralTillOut(literalReadingCtx)
+  }
+
+  private def continueNumLiteralTillOut(ctx: NumLiteralReadingCtx):
+  (ReadingCtx, Either[NumLiteralReaderErr, TokenWithLoc[NumLiteral]])
+  = {
+    ctx.readingCtx.current match {
+      case ch: Char if ch.isDigit => continueNumLiteralTillOut(ctx.copy(
+        capRev = ch :: ctx.capRev,
+        readingCtx = ctx.readingCtx.advanceInSameLine()
+      ))
+      case '.' if !ctx.capRev.contains('.') => continueNumLiteralTillOut(ctx.copy(
+        capRev = '.' :: ctx.capRev,
+        readingCtx = ctx.readingCtx.advanceInSameLine()
+      ))
+      case otherCh => constructLiteralOnOut(ctx)
+
+    }
+  }
+
+  private def constructLiteralOnOut(ctx: NumLiteralReadingCtx):
+  (ReadingCtx, Either[NumLiteralReaderErr, TokenWithLoc[NumLiteral]])
+  = {
+
+    val numInStr = ctx.capRev.reverse.mkString
+    val litLoc = Loc(start = ctx.literalStartPos, end = ctx.readingCtx.currentPos)
+
+    if (numInStr.contains('.')) {
+      numInStr.toDoubleOption match {
+        case Some(value) => (ctx.readingCtx, Right(TokenWithLoc(RealNumLiteralToken(value), litLoc)))
+        case None => (ctx.readingCtx, Left(NumLiteralReaderErr.UnableToParse(numInStr, litLoc)))
+      }
+    } else {
+      numInStr.toIntOption match {
+        case Some(value) => (ctx.readingCtx, Right(TokenWithLoc(IntegerNumLiteralToken(value), litLoc)))
+        case None => (ctx.readingCtx, Left(NumLiteralReaderErr.UnableToParse(numInStr, litLoc)))
+      }
+    }
+  }
+}
+
