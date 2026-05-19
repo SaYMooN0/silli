@@ -5,7 +5,7 @@ enum StringLiteralReaderErr {
   case UnclosedStringLiteral(openPos: Pos, expectedToBeClosed: Pos)
 }
 
-object StringLiteralReader {
+private[Lexer] object StringLiteralReader {
   private case class StringLiteralReadingCtx(capRev: List[Char], openQuotePos: Pos, readingCtx: ReadingCtx)
 
   def readFromQuote(ctx: ReadingCtx): (ReadingCtx, Either[StringLiteralReaderErr, TokenWithLoc[StringLiteralToken]]) = {

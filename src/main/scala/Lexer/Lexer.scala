@@ -2,32 +2,29 @@ package Lexer
 
 import java.io.StringReader
 
+object EndOfReaderReached;
+
+enum TokenizingErr {
+  case UnexpectedCharErr(char: Char, charPos: Pos, nextChar: ReaderChar)
+  case UnclosedComment(openPos: Pos)
+  case StringLiteralErr(e: StringLiteralReaderErr)
+  case NumLiteralErr(e: NumLiteralReaderErr)
+}
+
 object Lexer {
-  private def advanceInSameLine(ctx: ReadingCtx, token: Token, tokenLen: Int): (ReadingCtx, TokenWithLoc[_]) = {
-    val tokenStartPos = ctx.currentPos
-    val newCtx = ctx.advanceByInSameLine(tokenLen)
-    val loc = Loc(tokenStartPos, newCtx.currentPos)
 
-    (newCtx, TokenWithLoc(token, loc))
+  def getDefaultReadNextTokenFunc: LexerReadNextFunc = {
+    readNext
   }
 
-  private def skipTillRightCurly(openingCurlyPos: Pos, ctx: ReadingCtx): Either[
-    (TokenizingErr.UnclosedComment, ReadingCtx),
-    ReadingCtx
-  ] = {
-    ctx.current match {
-      case EOF => Left(TokenizingErr.UnclosedComment(openingCurlyPos), ctx)
-      case '}' => Right(ctx.advanceInSameLine())
-      case '\n' => skipTillRightCurly(openingCurlyPos, ctx.advanceToNewLine())
-      case _ => skipTillRightCurly(openingCurlyPos, ctx.advanceInSameLine())
-    }
-  }
+  type LexerReadNextResult = TokenWithLoc[_] | TokenizingErr | EndOfReaderReached.type
+  type LexerReadNextFunc = ReadingCtx => (ReadingCtx, LexerReadNextResult)
 
-  private def readNext(ctx: ReadingCtx): (ReadingCtx, TokenWithLoc[_] | TokenizingErr | EndOfReaderReached.type) =
+  private val readNext: LexerReadNextFunc = (ctx: ReadingCtx) => {
     (ctx.current, ctx.next) match {
 
       case (EOF, _) => (ctx, EndOfReaderReached)
-      case ('\n', _) => readNext(ctx.advanceToNewLine())
+      case ('\n', _) | ('\r', '\n') => readNext(ctx.advanceToNewLine())
       case (' ', _) => readNext(ctx.advanceInSameLine())
 
       case (':', '=') => advanceInSameLine(ctx, SimpleToken.Assign, 2)
@@ -63,24 +60,41 @@ object Lexer {
         case (newCtx, Left(err)) => (newCtx, TokenizingErr.NumLiteralErr(err))
         case (newCtx, Right(token)) => (newCtx, token)
       }
-      case (a: Char, b) if IdentAndKeywordReader.isCharCorrectIdentStarter(a) => IdentAndKeywordReader.readFromFirstChar(a, ctx)
+      case (a: Char, b) if IdentRules.isCorrectIdentStarter(a) => IdentAndKeywordReader.readFromFirstChar(a, ctx)
       case (a: Char, b) => (ctx, TokenizingErr.UnexpectedCharErr(a, ctx.currentPos, b))
     }
+  }
+
+  private def advanceInSameLine(ctx: ReadingCtx, token: Token, tokenLen: Int): (ReadingCtx, TokenWithLoc[_]) = {
+    val tokenStartPos = ctx.currentPos
+    val newCtx = ctx.advanceByInSameLine(tokenLen)
+    val loc = Loc(tokenStartPos, newCtx.currentPos)
+
+    (newCtx, TokenWithLoc(token, loc))
+  }
+
+  private def skipTillRightCurly(openingCurlyPos: Pos, ctx: ReadingCtx): Either[
+    (TokenizingErr.UnclosedComment, ReadingCtx),
+    ReadingCtx
+  ] = {
+    ctx.current match {
+      case EOF => Left(TokenizingErr.UnclosedComment(openingCurlyPos), ctx)
+      case '}' => Right(ctx.advanceInSameLine())
+      case '\n' => skipTillRightCurly(openingCurlyPos, ctx.advanceToNewLine())
+      case _ => skipTillRightCurly(openingCurlyPos, ctx.advanceInSameLine())
+    }
+  }
 
   def printAllTokens(str: String): Unit = {
-    val reader = new StringReader(str)
-
-    val curCh = reader.readNextInputChar()
-    val nxtCh = reader.readNextInputChar()
-
-    val startCtx = ReadingCtx(curCh, nxtCh, reader, Pos(1, 1))
+    val startCtx = ReadingCtx.init(new StringReader(str))
 
     def printTokenAndContinueIfNotEnd(ctx: ReadingCtx): Unit = {
       val (newCtx, tokenRes) = readNext(ctx)
       println(tokenRes)
       tokenRes match {
         case EndOfReaderReached => ()
-        case e: TokenizingErr => throw new Error(s"$e")
+        case e: TokenizingErr =>
+          throw new Error(s"$e")
         case _ => printTokenAndContinueIfNotEnd(newCtx)
       }
     }
@@ -88,12 +102,3 @@ object Lexer {
     printTokenAndContinueIfNotEnd(startCtx)
   }
 }
-
-enum TokenizingErr {
-  case UnexpectedCharErr(char: Char, charPos: Pos, nextChar: ReaderChar)
-  case UnclosedComment(openPos: Pos)
-  case StringLiteralErr(e: StringLiteralReaderErr)
-  case NumLiteralErr(e: NumLiteralReaderErr)
-}
-
-object EndOfReaderReached;

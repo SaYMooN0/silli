@@ -16,12 +16,12 @@ final case class Loc(start: Pos, end: Pos) {
 }
 
 
-private[Lexer] final case class ReadingCtx(
-                                            current: ReaderChar,
-                                            next: ReaderChar,
-                                            reader: Reader,
-                                            currentPos: Pos
-                                          ) {
+final case class ReadingCtx(
+                             current: ReaderChar,
+                             next: ReaderChar,
+                             reader: Reader,
+                             currentPos: Pos
+                           ) {
   def advanceInSameLine(): ReadingCtx =
     ReadingCtx(
       current = this.next,
@@ -45,5 +45,12 @@ private[Lexer] final case class ReadingCtx(
       reader = this.reader,
       currentPos = currentPos.goToNextLine()
     )
+}
 
+object ReadingCtx {
+  def init(reader: Reader): ReadingCtx = {
+    val curCh = reader.readNextInputChar()
+    val nxtCh = reader.readNextInputChar()
+    ReadingCtx(curCh, nxtCh, reader, Pos(1, 1))
+  }
 }

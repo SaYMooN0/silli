@@ -5,7 +5,7 @@ enum NumLiteralReaderErr {
   case UnableToParse(stringValue: String, loc: Loc)
 }
 
-object NumLiteralReader {
+private[Lexer] object NumLiteralReader {
   private case class NumLiteralReadingCtx(capRev: List[Char], literalStartPos: Pos, readingCtx: ReadingCtx)
 
   private type NumLiteral = IntegerNumLiteralToken | RealNumLiteralToken;

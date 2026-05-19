@@ -6,7 +6,7 @@ import TypeSystem.TypeSpec
 final case class TokenWithLoc[+T <: Token](token: T, loc: Loc)
 
 type Token =
-  BoolLiteralToken
+  BooleanLiteralToken
     | IntegerNumLiteralToken
     | RealNumLiteralToken
     | StringLiteralToken
@@ -17,7 +17,7 @@ type Token =
     | SyntaxKeywordToken
 
 
-enum BoolLiteralToken {
+enum BooleanLiteralToken {
   case True;
   case False;
 }
@@ -85,7 +85,7 @@ type Keyword =
     | OpToken.Xor.type
     | SyntaxKeywordToken
     | TypeNameToken
-    | BoolLiteralToken
+    | BooleanLiteralToken
 
 def mapToKeyword(str: String): Option[Keyword] = str match {
   //OpToken
@@ -109,8 +109,8 @@ def mapToKeyword(str: String): Option[Keyword] = str match {
   case TypeSpec.BooleanT.name => Some(TypeNameToken(TypeSpec.BooleanT))
   case TypeSpec.StringT.name => Some(TypeNameToken(TypeSpec.StringT))
   //BoolLiteralToken
-  case "true" => Some(BoolLiteralToken.True)
-  case "false" => Some(BoolLiteralToken.False)
+  case "true" => Some(BooleanLiteralToken.True)
+  case "false" => Some(BooleanLiteralToken.False)
   //else
   case _ => None
 }

@@ -1,7 +1,7 @@
 
 @main
 def main(): Unit = {
-  Lexer.Lexer.printAllTokens("""begin 
+  Lexer.Lexer.printAllTokens("""begin "123"
                                |    if n <= 1 then
                                |        inter := "empty"
                                |    else
