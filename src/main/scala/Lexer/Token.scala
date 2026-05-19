@@ -26,9 +26,9 @@ final case class IntegerNumLiteralToken(value: Int)
 final case class RealNumLiteralToken(value: Double)
 final case class StringLiteralToken(value: String)
 
-class TypeNameToken(typeSpec: TypeSpec)
+final case class TypeNameToken(typeSpec: TypeSpec)
 
-class IdentToken(ident: String);
+final case class IdentToken(ident: String);
 
 enum SimpleToken {
   case Assign; //:=

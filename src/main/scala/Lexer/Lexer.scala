@@ -2,7 +2,6 @@ package Lexer
 
 import java.io.StringReader
 
-object EndOfReaderReached;
 
 enum TokenizingErr {
   case UnexpectedCharErr(char: Char, charPos: Pos, nextChar: ReaderChar)
@@ -11,13 +10,15 @@ enum TokenizingErr {
   case NumLiteralErr(e: NumLiteralReaderErr)
 }
 
+object EndOfReaderReached;
+
 object Lexer {
 
   def getDefaultReadNextTokenFunc: LexerReadNextFunc = {
     readNext
   }
 
-  type LexerReadNextResult = TokenWithLoc[_] | TokenizingErr | EndOfReaderReached.type
+  type LexerReadNextResult = TokenWithLoc[?] | TokenizingErr | EndOfReaderReached.type
   type LexerReadNextFunc = ReadingCtx => (ReadingCtx, LexerReadNextResult)
 
   private val readNext: LexerReadNextFunc = (ctx: ReadingCtx) => {
@@ -65,7 +66,7 @@ object Lexer {
     }
   }
 
-  private def advanceInSameLine(ctx: ReadingCtx, token: Token, tokenLen: Int): (ReadingCtx, TokenWithLoc[_]) = {
+  private def advanceInSameLine(ctx: ReadingCtx, token: Token, tokenLen: Int): (ReadingCtx, TokenWithLoc[?]) = {
     val tokenStartPos = ctx.currentPos
     val newCtx = ctx.advanceByInSameLine(tokenLen)
     val loc = Loc(tokenStartPos, newCtx.currentPos)
