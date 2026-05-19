@@ -1,8 +1,8 @@
 package Lexer
 
-enum StringLiteralReaderErr {
-  case InvalidEsqSeqInStringLiteral(char: ReaderChar, backslashPos: Pos)
-  case UnclosedStringLiteral(openPos: Pos, expectedToBeClosed: Pos)
+enum StringLiteralReaderErr(val  pos: Pos) {
+  case InvalidEsqSeqInStringLiteral(char: ReaderChar, backslashPos: Pos) extends StringLiteralReaderErr(backslashPos)
+  case UnclosedStringLiteral(openPos: Pos, expectedToBeClosed: Pos) extends StringLiteralReaderErr(openPos)
 }
 
 private[Lexer] object StringLiteralReader {
@@ -42,6 +42,6 @@ private[Lexer] object StringLiteralReader {
 
   private def addToCapAndAdvanceBy2(ctx: StringLiteralReadingCtx, ch: Char) = continueLiteralTillOut(ctx.copy(
     capRev = ch :: ctx.capRev,
-    readingCtx = ctx.readingCtx.advanceInSameLine().advanceToNewLine()
+    readingCtx = ctx.readingCtx.advanceInSameLine().advanceInSameLine()
   ))
 }

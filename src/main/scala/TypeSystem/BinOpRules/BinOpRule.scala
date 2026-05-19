@@ -1,9 +1,9 @@
 package TypeSystem.BinOpRules
 
-import TypeSystem.{BinOp, TypeSpec}
+import TypeSystem.{BinOp, BuiltInType}
 
 final case class BinOpRule(
                             op: BinOp,
-                            rightType: TypeSpec,
-                            returnType: TypeSpec
+                            rightType: BuiltInType,
+                            returnType: BuiltInType
                           )

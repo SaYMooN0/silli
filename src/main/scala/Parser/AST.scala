@@ -16,21 +16,21 @@ final case class AstBlock(
                          )
 
 final case class AstVarDecl(
-                             varRef: AstVarRef,
-                             typeAnnotation: (TypeSystem.TypeSpec, Loc),
+                             varRef: (Ident, Loc),
+                             typeAnnotation: (TypeSystem.BuiltInType, Loc),
                              loc: Loc
                            )
 
 final case class AstProcDecl(
                               procName: (Ident, Loc),
                               formalParams: List[AstFormalParam],
-                              bloc: AstBlock,
+                              block: AstBlock,
                               loc: Loc
                             )
 
 final case class AstFormalParam(
-                                 varRef: AstVarRef,
-                                 typeAnnotation: (TypeSystem.TypeSpec, Loc),
+                                 varRef: (Ident, Loc),
+                                 typeAnnotation: (TypeSystem.BuiltInType, Loc),
                                  loc: Loc
                                )
 

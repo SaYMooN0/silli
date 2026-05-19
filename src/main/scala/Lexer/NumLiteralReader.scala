@@ -1,8 +1,8 @@
 package Lexer
 
 
-enum NumLiteralReaderErr {
-  case UnableToParse(stringValue: String, loc: Loc)
+enum NumLiteralReaderErr(val pos: Pos) {
+  case UnableToParse(stringValue: String, loc: Loc) extends NumLiteralReaderErr(loc.start)
 }
 
 private[Lexer] object NumLiteralReader {

@@ -1,18 +1,8 @@
+import scala.io.Source
 
 @main
 def main(): Unit = {
-  Lexer.Lexer.printAllTokens("""begin "123"
-                               |    if n <= 1 then
-                               |        inter := "empty"
-                               |    else
-                               |    begin
-                               |        inter := cap*(n);    
-                               |        CalcFactorial(n - 1, cap*(n-1));
-                               |    end;
-                               |end;
-                               |
-                               |begin
-                               |    CalcFactorial(4, "-");
-                               |end.""".stripMargin)
+  val input = Source.fromFile("pascalProgram").mkString
+  println(Parser.constructAst(input))
 }
 

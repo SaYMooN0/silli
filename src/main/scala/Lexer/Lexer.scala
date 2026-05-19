@@ -3,11 +3,11 @@ package Lexer
 import java.io.StringReader
 
 
-enum TokenizingErr {
-  case UnexpectedCharErr(char: Char, charPos: Pos, nextChar: ReaderChar)
-  case UnclosedComment(openPos: Pos)
-  case StringLiteralErr(e: StringLiteralReaderErr)
-  case NumLiteralErr(e: NumLiteralReaderErr)
+enum TokenizingErr(val pos: Pos) {
+  case UnexpectedCharErr(char: Char, charPos: Pos, nextChar: ReaderChar) extends TokenizingErr(charPos)
+  case UnclosedComment(openPos: Pos) extends TokenizingErr(openPos)
+  case StringLiteralErr(err: StringLiteralReaderErr) extends TokenizingErr(err.pos)
+  case NumLiteralErr(err: NumLiteralReaderErr) extends TokenizingErr(err.pos)
 }
 
 object EndOfReaderReached;
@@ -25,7 +25,8 @@ object Lexer {
     (ctx.current, ctx.next) match {
 
       case (EOF, _) => (ctx, EndOfReaderReached)
-      case ('\n', _) | ('\r', '\n') => readNext(ctx.advanceToNewLine())
+      case ('\n', _) => readNext(ctx.advanceToNewLine())
+      case ('\r', '\n') => readNext(ctx.advanceInSameLine().advanceToNewLine())
       case (' ', _) => readNext(ctx.advanceInSameLine())
 
       case (':', '=') => advanceInSameLine(ctx, SimpleToken.Assign, 2)

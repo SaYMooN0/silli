@@ -1,6 +1,6 @@
 package Lexer
 
-import TypeSystem.TypeSpec
+import TypeSystem.BuiltInType
 
 
 final case class TokenWithLoc[+T <: Token](token: T, loc: Loc)
@@ -10,7 +10,7 @@ type Token =
     | IntegerNumLiteralToken
     | RealNumLiteralToken
     | StringLiteralToken
-    | TypeNameToken
+    | BuiltInTypeNameToken
     | IdentToken
     | SimpleToken
     | OpToken
@@ -26,7 +26,7 @@ final case class IntegerNumLiteralToken(value: Int)
 final case class RealNumLiteralToken(value: Double)
 final case class StringLiteralToken(value: String)
 
-final case class TypeNameToken(typeSpec: TypeSpec)
+final case class BuiltInTypeNameToken(typeSpec: BuiltInType)
 
 final case class IdentToken(ident: String);
 
@@ -84,7 +84,7 @@ type Keyword =
     | OpToken.Or.type
     | OpToken.Xor.type
     | SyntaxKeywordToken
-    | TypeNameToken
+    | BuiltInTypeNameToken
     | BooleanLiteralToken
 
 def mapToKeyword(str: String): Option[Keyword] = str match {
@@ -104,10 +104,10 @@ def mapToKeyword(str: String): Option[Keyword] = str match {
   case "then" => Some(SyntaxKeywordToken.Then)
   case "else" => Some(SyntaxKeywordToken.Else)
   //TypeNameToken
-  case TypeSpec.IntegerT.name => Some(TypeNameToken(TypeSpec.IntegerT))
-  case TypeSpec.RealT.name => Some(TypeNameToken(TypeSpec.RealT))
-  case TypeSpec.BooleanT.name => Some(TypeNameToken(TypeSpec.BooleanT))
-  case TypeSpec.StringT.name => Some(TypeNameToken(TypeSpec.StringT))
+  case BuiltInType.IntegerT.name => Some(BuiltInTypeNameToken(BuiltInType.IntegerT))
+  case BuiltInType.RealT.name => Some(BuiltInTypeNameToken(BuiltInType.RealT))
+  case BuiltInType.BooleanT.name => Some(BuiltInTypeNameToken(BuiltInType.BooleanT))
+  case BuiltInType.StringT.name => Some(BuiltInTypeNameToken(BuiltInType.StringT))
   //BoolLiteralToken
   case "true" => Some(BooleanLiteralToken.True)
   case "false" => Some(BooleanLiteralToken.False)

@@ -27,14 +27,15 @@ object Parser {
   val cur: Parser[TokenWithLoc[?]] = Parser(ctx => Right((ctx.curT, ctx)))
 
   val nxt: Parser[TokenWithLoc[?]] = Parser(ctx => Right((ctx.nxtT, ctx)))
- 
+
   val curAndNxt: Parser[(TokenWithLoc[?], TokenWithLoc[?])] = Parser(ctx => Right(((ctx.curT, ctx.nxtT), ctx)))
 
   private val advance: Parser[Unit] = Parser { ctx => ctx.advance.map { nextCtx => ((), nextCtx) } }
 
   def eatToken(expected: Token): Parser[TokenWithLoc[?]] =
     Parser.cur.flatMap { received =>
-      if received.token == expected then Parser.advance.map(_ => received)
+      if received.token == expected
+      then Parser.advance.map(_ => received)
       else ParserErr.UnexpectedToken(received, ExpectedTokens.Single(expected)).toParserFail
     }
 

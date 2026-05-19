@@ -4,7 +4,7 @@ import TypeSystem.*
 import TypeSystem.ArithmeticBinOps.*
 import TypeSystem.ComparisonBinOps.*
 import TypeSystem.EqualityBinOps.*
-import TypeSystem.TypeSpec.*
+import TypeSystem.BuiltInType.*
 
 object IntegerSupportedBinOps {
   val rules: List[BinOpRule] =

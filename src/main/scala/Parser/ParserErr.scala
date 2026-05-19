@@ -9,16 +9,14 @@ enum ParserErr(val pos: Pos) {
                       ) extends ParserErr(received.loc.start)
 
   case CouldNotParseExpectedConstruct(
-                                     receivedToken: TokenWithLoc[?],
-                                     expectedNode: ExpectedConstruct
-                                   ) extends ParserErr(receivedToken.loc.start)
+                                       receivedToken: TokenWithLoc[?],
+                                       expectedNode: ExpectedConstruct
+                                     ) extends ParserErr(receivedToken.loc.start)
 
-  case TokenizingFailed(
-                         override val pos: Pos,
-                         err: Lexer.TokenizingErr
-                       ) extends ParserErr(pos)
+  case TokenizingFailed(err: Lexer.TokenizingErr) extends ParserErr(err.pos)
 
   case UnexpectedEndOfReader(lastToken: TokenWithLoc[?]) extends ParserErr(lastToken.loc.end)
+  case EmptyReader(override val pos: Pos) extends ParserErr(pos)
 }
 
 enum ExpectedTokens {
@@ -30,6 +28,7 @@ sealed trait ExpectedConstruct
 
 object ExpectedConstruct {
   case object Ident extends ExpectedConstruct
+  case object TypeSpec extends ExpectedConstruct
   case object Expr extends ExpectedConstruct
   case object Stmt extends ExpectedConstruct
 }

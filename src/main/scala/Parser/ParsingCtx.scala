@@ -26,7 +26,7 @@ private final case class ParsingCtx(
   def advance: Either[ParserErr, ParsingCtx] =
     this.lexer.readNextToken() match {
       case (_, EndOfReaderReached) => Left(ParserErr.UnexpectedEndOfReader(this.nxtT))
-      case (_, err: TokenizingErr) => Left(ParserErr.TokenizingFailed(this.curT.loc.end, err))
+      case (_, err: TokenizingErr) => Left(ParserErr.TokenizingFailed(err))
       case (lexerWithUpdatedState, newToken: TokenWithLoc[?]) =>
         Right(
           this.copy(
@@ -39,21 +39,17 @@ private final case class ParsingCtx(
 }
 
 object ParsingCtx {
-  def init(
-            inputReader: Reader,
-            lexerReadNextTokenFunc: LexerReadNextFunc
-          ): ParsingCtx | TokenizingErr | EndOfReaderReached.type
-  = {
-    lexerReadNextTokenFunc(ReadingCtx.init(inputReader)) match {
-      case (_, e: TokenizingErr) => e
-      case (_, EndOfReaderReached) => EndOfReaderReached
+  def init(inputReader: Reader, lexerReadNextTokenFunc: LexerReadNextFunc): Either[ParserErr, ParsingCtx] = {
+    val readingCtx = ReadingCtx.init(inputReader)
+    lexerReadNextTokenFunc(readingCtx) match {
+      case (_, e: TokenizingErr) => Left(ParserErr.TokenizingFailed(e))
+      case (ctxAfterFirst, EndOfReaderReached) => Left(ParserErr.EmptyReader(ctxAfterFirst.currentPos))
+
       case (ctxAfterFirst, firstToken: TokenWithLoc[?]) => lexerReadNextTokenFunc(ctxAfterFirst) match {
-        case (_, e: TokenizingErr) => e
-        case (_, EndOfReaderReached) => EndOfReaderReached
-        case (ctxAfterSecond, secondToken: TokenWithLoc[?]) => ParsingCtx(
-          firstToken, secondToken,
-          LexerWithState(lexerReadNextTokenFunc, ctxAfterSecond)
-        )
+        case (_, e: TokenizingErr) => Left(ParserErr.TokenizingFailed(e))
+        case (ctxAfterSecond, EndOfReaderReached) => Left(ParserErr.UnexpectedEndOfReader(firstToken))
+        case (ctxAfterSecond, secondToken: TokenWithLoc[?]) =>
+          Right(ParsingCtx(firstToken, secondToken, LexerWithState(lexerReadNextTokenFunc, ctxAfterSecond)))
       }
     }
   }
