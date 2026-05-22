@@ -23,7 +23,9 @@ enum BooleanLiteralToken {
 }
 
 final case class IntegerNumLiteralToken(value: Int)
+
 final case class RealNumLiteralToken(value: Double)
+
 final case class StringLiteralToken(value: String)
 
 final case class BuiltInTypeNameToken(typeSpec: BuiltInType)
@@ -50,7 +52,7 @@ enum OpToken {
 
   //div
   case RealDiv // /
-  case Div
+  case Div //div keyword
 
   // comparison
   case Equal // =
@@ -67,14 +69,14 @@ enum OpToken {
 }
 
 enum SyntaxKeywordToken {
-  case End
-  case Begin
-  case Var
-  case Program
-  case Procedure
-  case If
-  case Then
-  case Else
+  case Begin;
+  case End;
+  case Var;
+  case Program;
+  case Procedure;
+  case If;
+  case Then;
+  case Else;
 }
 
 type Keyword =

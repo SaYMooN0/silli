@@ -1,7 +1,6 @@
 package Parser
 
-import Lexer.IdentRules
-import Lexer.Loc
+import Lexer.{IdentRules, Loc}
 
 import scala.compiletime.erasedValue
 
@@ -34,73 +33,74 @@ final case class AstFormalParam(
                                  loc: Loc
                                )
 
-type BasicASTNode = AstExpr | AstStmt
+sealed trait AstExpr {
+  def loc: Loc
+}
 
-final case class BooleanLiteral(value: Boolean, loc: Loc)
+final case class BooleanLiteral(value: Boolean, loc: Loc) extends AstExpr
 
-final case class IntegerLiteral(value: Int, loc: Loc)
+final case class IntegerLiteral(value: Int, loc: Loc) extends AstExpr
 
-final case class RealLiteral(value: Double, loc: Loc)
+final case class RealLiteral(value: Double, loc: Loc) extends AstExpr
 
-final case class StringLiteral(value: String, loc: Loc)
+final case class StringLiteral(value: String, loc: Loc) extends AstExpr
 
 final case class AstUnOp(
                           expr: AstExpr,
                           op: (TypeSystem.UnOp, Loc),
                           loc: Loc
-                        )
+                        ) extends AstExpr
 
 final case class AstBinOp(
                            left: AstExpr,
                            right: AstExpr,
                            op: (TypeSystem.BinOp, Loc),
                            loc: Loc
-                         )
+                         ) extends AstExpr
 
-final case class AstVarRef(ident: Ident, loc: Loc)
+final case class AstVarRef(
+                            ident: Ident,
+                            loc: Loc
+                          ) extends AstExpr
 
-final case class Ident(value: String) {
+final case class Ident(value: String):
   require(
-    IdentRules.isCorrectIdentStarter(value.head)
+    value.nonEmpty
+      && IdentRules.isCorrectIdentStarter(value.head)
       && value.tail.forall(IdentRules.canBeInIdentifier)
   )
+
+sealed trait AstStmt {
+  def loc: Loc
 }
 
-type AstExpr =
-  BooleanLiteral
-    | IntegerLiteral
-    | RealLiteral
-    | StringLiteral
-    | AstUnOp
-    | AstBinOp
-    | AstVarRef
+final case class AstCompoundStmt(
+                                  stmt: List[AstStmt],
+                                  loc: Loc
+                                ) extends AstStmt
 
-final case class AstCompoundStmt(stmt: List[AstStmt], loc: Loc)
-
-final case class AstAssignStmt(varRef: AstVarRef, expr: AstExpr, loc: Loc)
+final case class AstAssignStmt(
+                                varRef: AstVarRef,
+                                expr: AstExpr,
+                                loc: Loc
+                              ) extends AstStmt
 
 final case class AstProcCallStmt(
                                   procName: (Ident, Loc),
                                   actualParams: List[AstExpr],
                                   loc: Loc
-                                )
+                                ) extends AstStmt
 
 final case class AstIfStmt(
                             condition: AstExpr,
-                            thenStmt: AstCompoundStmt,
-                            elseStmt: AstCompoundStmt,
+                            thenStmt: AstStmt,
+                            elseStmt: Option[AstStmt],
                             loc: Loc
-                          )
-
-type AstStmt =
-  AstCompoundStmt
-    | AstAssignStmt
-    | AstProcCallStmt
-    | AstIfStmt
+                          ) extends AstStmt
 
 object AstNodeName {
 
-  inline def of[A <: BasicASTNode]: String =
+  inline def of[A <: AstExpr | AstStmt]: String =
     inline erasedValue[A] match {
       case _: BooleanLiteral => "boolean literal"
       case _: RealLiteral => "real literal"

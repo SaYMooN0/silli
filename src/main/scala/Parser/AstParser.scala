@@ -1,11 +1,11 @@
 package Parser
 
-import Lexer.{EndOfReaderReached, IdentToken, Loc, ReadingCtx, SimpleToken, SyntaxKeywordToken, TokenizingErr, BuiltInTypeNameToken}
+import Lexer.*
 
 import java.io.StringReader
 
 def constructAst(str: String): Either[ParserErr, AstRoot] = {
-  val parsingCtxRes = ParsingCtx.init(new StringReader(str), Lexer.Lexer.getDefaultReadNextTokenFunc)
+  val parsingCtxRes = ParsingCtx.init(new StringReader(str), Lexer.getDefaultReadNextTokenFunc)
   parsingCtxRes match {
     case Right(ctx) => parseProgramAst().run(ctx) match {
       case Left(err) => Left(err)
@@ -18,11 +18,11 @@ def constructAst(str: String): Either[ParserErr, AstRoot] = {
 
 private def parseProgramAst(): Parser[AstRoot] =
   for {
-    _ <- Parser.skipToken(SyntaxKeywordToken.Program)
+    _ <- Parser.eatToken(SyntaxKeywordToken.Program)
     programName <- parseIdentWithLoc()
-    _ <- Parser.skipToken(SimpleToken.SemiColon)
+    _ <- Parser.eatToken(SimpleToken.SemiColon)
     block <- parseBlock()
-    _ <- Parser.skipToken(SimpleToken.Dot)
+    _ <- Parser.eatToken(SimpleToken.Dot)
   } yield AstRoot(programName, block)
 
 private def parseBlock(): Parser[AstBlock] =
@@ -35,14 +35,14 @@ private def parseBlock(): Parser[AstBlock] =
 
 private def parseVarDecls(): Parser[List[AstVarDecl]] = Parser.cur.flatMap { cur =>
   cur.token match {
-    case SyntaxKeywordToken.Var => Parser.skipToken(cur.token).flatMap(_ => parseVarDeclAndContinue(List()))
+    case SyntaxKeywordToken.Var => Parser.eatToken(cur.token).flatMap(_ => parseVarDeclAndContinue(List()))
     case _ => Parser.succeed(List())
   }
 }
 private def parseVarDeclAndContinue(gathered: List[AstVarDecl]): Parser[List[AstVarDecl]] = {
   for {
     identsWithAnnotation <- parseIdentsListWithTypeAnnotation()
-    _ <- Parser.skipToken(SimpleToken.SemiColon)
+    _ <- Parser.eatToken(SimpleToken.SemiColon)
     declsWithNew = gathered ++ identsWithAnnotation.map(
       (ident, typeAnnotation) => AstVarDecl(ident, typeAnnotation, Loc(ident._2.start, typeAnnotation._2.end))
     )
@@ -63,7 +63,7 @@ private def parseProcDeclAndContinue(gathered: List[AstProcDecl]): Parser[List[A
         procedureKw <- Parser.eatToken(cur.token)
         procName <- parseIdentWithLoc()
         formalParams <- parseProcDeclFormalParams()
-        _ <- Parser.skipToken(SimpleToken.SemiColon)
+        _ <- Parser.eatToken(SimpleToken.SemiColon)
         block <- parseBlock()
         lastSemi <- Parser.eatToken(SimpleToken.SemiColon)
         procDeclLoc = Loc(procedureKw.loc.start, lastSemi.loc.end)
@@ -77,9 +77,9 @@ private def parseProcDeclFormalParams(): Parser[List[AstFormalParam]] = {
   Parser.cur.flatMap { cur =>
     cur.token match {
       case SimpleToken.LPar => for {
-        _ <- Parser.skipToken(cur.token)
+        _ <- Parser.eatToken(cur.token)
         result <- continueProcDeclFormalParams(List())
-        _ <- Parser.skipToken(SimpleToken.RPar)
+        _ <- Parser.eatToken(SimpleToken.RPar)
       } yield result
       case _ => Parser.succeed(List())
     }
@@ -113,30 +113,151 @@ private def parseStmt(): Parser[AstStmt] =
     }
   }
 
-private def parseCompoundStmt(): Parser[AstCompoundStmt] = ???
+private def parseCompoundStmt(): Parser[AstCompoundStmt] =
+  for {
+    beginKw <- Parser.eatToken(SyntaxKeywordToken.Begin)
+    firstStmt <- parseStmt()
+    allStmts <- parseStmtsListTail(List(firstStmt))
+    endKw <- Parser.eatToken(SyntaxKeywordToken.Begin)
+  } yield AstCompoundStmt(allStmts, Loc(beginKw.loc.start, endKw.loc.end))
 
-private def parseIfStmt(): Parser[AstIfStmt] = ???
+private def parseIfStmt(): Parser[AstIfStmt] =
+  for {
+    ifKw <- Parser.eatToken(SyntaxKeywordToken.If)
+    conditionExpr <- parseExpr()
+    _ <- Parser.eatToken(SyntaxKeywordToken.Then)
+    thenStmt <- parseStmt()
+    elseStmt: Option[AstStmt] <- Parser.cur.flatMap { cur =>
+      cur.token match {
+        case SyntaxKeywordToken.Else => for {
+          _ <- Parser.eatToken(SyntaxKeywordToken.Else)
+          stmt <- parseStmt()
+        } yield Some(stmt)
+
+        case _ => Parser.succeed(None)
+      }
+    }
+    ifStmtEndPos = elseStmt match {
+      case Some(stmt) => stmt.loc.end
+      case None => thenStmt.loc.end
+    }
+  } yield AstIfStmt(conditionExpr, thenStmt, elseStmt, Loc(ifKw.loc.start, ifStmtEndPos))
 
 private def parseProcCallStmt(): Parser[AstProcCallStmt] = ???
 
 private def parseAssignStmt(): Parser[AstAssignStmt] = ???
 //expr
+private def parseExpr(): Parser[AstExpr] = parseOrExpr()
+
+private def parseOrExpr(): Parser[AstExpr] = parseBinOpChain(
+  parseAndExpr,
+  mapTokenToOp = {
+    case OpToken.Or => Some(TypeSystem.LogicBinOps.Or)
+    case OpToken.Xor => Some(TypeSystem.LogicBinOps.Xor)
+    case _ => None
+  })
+
+private def parseAndExpr(): Parser[AstExpr] = parseBinOpChain(
+  parseRelExpr,
+  mapTokenToOp = {
+    case OpToken.And => Some(TypeSystem.LogicBinOps.And)
+    case _ => None
+  })
+
+private def parseRelExpr(): Parser[AstExpr] = {
+  val mapTokenToRelOp: Token => Option[TypeSystem.BinOp] = {
+    case OpToken.Equal => Some(TypeSystem.EqualityBinOps.Equal)
+    case OpToken.NotEqual => Some(TypeSystem.EqualityBinOps.NotEqual)
+    case OpToken.Less => Some(TypeSystem.ComparisonBinOps.Less)
+    case OpToken.LessOrEqual => Some(TypeSystem.ComparisonBinOps.LessOrEqual)
+    case OpToken.Greater => Some(TypeSystem.ComparisonBinOps.Greater)
+    case OpToken.GreaterOrEqual => Some(TypeSystem.ComparisonBinOps.GreaterOrEqual)
+    case _ => None
+  }
+  for {
+    left <- parseAddExpr()
+    result <- Parser.cur.flatMap { opToken =>
+      mapTokenToRelOp(opToken.token) match {
+        case None => Parser.succeed(left)
+        case Some(binOp) => for {
+          _ <- Parser.eatToken(opToken.token)
+          right <- parseAddExpr()
+        } yield AstBinOp(left, right, (binOp, opToken.loc), Loc(left.loc.start, right.loc.end))
+
+      }
+    }
+  } yield result
+}
+private def parseAddExpr(): Parser[AstExpr] = parseBinOpChain(
+  parseMulExpr,
+  mapTokenToOp = {
+    case OpToken.Plus => Some(TypeSystem.ArithmeticBinOps.Add)
+    case OpToken.Minus => Some(TypeSystem.ArithmeticBinOps.Sub)
+    case _ => None
+  })
+private def parseMulExpr(): Parser[AstExpr] = parseBinOpChain(
+  parseUnaryExpr,
+  mapTokenToOp = {
+    case OpToken.Mul => Some(TypeSystem.ArithmeticBinOps.Mul)
+    case OpToken.RealDiv => Some(TypeSystem.RealDivBinOp)
+    case OpToken.Div => Some(TypeSystem.IntDivBinOp)
+    case _ => None
+  })
+
+private def parseUnaryExpr(): Parser[AstExpr] = {
+  val mapTokenToUnaryOp: Token => Option[TypeSystem.UnOp] = {
+    case OpToken.Not => Some(TypeSystem.UnOp.Not)
+    case OpToken.Minus => Some(TypeSystem.UnOp.Minus)
+    case OpToken.Plus => Some(TypeSystem.UnOp.Plus)
+    case _ => None
+  }
+
+  Parser.cur.flatMap { opToken =>
+    mapTokenToUnaryOp(opToken.token) match {
+      case None => parsePrimaryExpr()
+      case Some(unOp) => for {
+        _ <- Parser.eatToken(opToken.token)
+        inner <- parseUnaryExpr()
+      } yield AstUnOp(inner, (unOp, opToken.loc), Loc(opToken.loc.start, inner.loc.end))
+    }
+  }
+}
+private def parsePrimaryExpr(): Parser[AstExpr] = {
+  Parser.cur.flatMap { cur =>
+    cur.token match {
+      case l: RealNumLiteralToken => Parser.skipAndSucceed(l, RealLiteral(l.value, cur.loc))
+      case l: IntegerNumLiteralToken => Parser.skipAndSucceed(l, IntegerLiteral(l.value, cur.loc))
+      case l: StringLiteralToken => Parser.skipAndSucceed(l, StringLiteral(l.value, cur.loc))
+      case BooleanLiteralToken.True => Parser.skipAndSucceed(BooleanLiteralToken.True, BooleanLiteral(true, cur.loc))
+      case BooleanLiteralToken.False => Parser.skipAndSucceed(BooleanLiteralToken.False, BooleanLiteral(false, cur.loc))
+      case ident: IdentToken => Parser.skipAndSucceed(ident, AstVarRef(Ident(ident.ident), cur.loc))
+      case SimpleToken.LPar => for {
+        lPar <- Parser.eatToken(cur.token)
+        innerExpr <- parseExpr()
+        rPar <- Parser.eatToken(SimpleToken.RPar)
+      } yield innerExpr
+      case _ => ParserErr.CouldNotParseExpectedConstruct(cur, ExpectedConstruct.PrimaryExpr).toParserFail
+    }
+  }
+}
 
 //helpers
 private def parseIdentWithLoc(): Parser[(Ident, Loc)] =
   Parser.cur.flatMap { received =>
     received.token match {
-      case t: IdentToken => Parser.skipToken(t).map(_ => (Ident(t.ident), received.loc))
+      case t: IdentToken => Parser.eatToken(t).map(_ => (Ident(t.ident), received.loc))
       case _ => ParserErr.CouldNotParseExpectedConstruct(received, ExpectedConstruct.Ident).toParserFail
     }
   }
+
 private def parseTypeSpecWithLoc(): Parser[(TypeSystem.BuiltInType, Loc)] =
   Parser.cur.flatMap { received =>
     received.token match {
-      case t: BuiltInTypeNameToken => Parser.skipToken(t).map(_ => (t.typeSpec, received.loc))
+      case t: BuiltInTypeNameToken => Parser.eatToken(t).map(_ => (t.typeSpec, received.loc))
       case _ => ParserErr.CouldNotParseExpectedConstruct(received, ExpectedConstruct.TypeSpec).toParserFail
     }
   }
+
 private def parseNonEmptyIdentsList(): Parser[List[(Ident, Loc)]] =
   for {
     head <- parseIdentWithLoc()
@@ -149,7 +270,7 @@ private def parseIdentsListTail(gathered: List[(Ident, Loc)]): Parser[List[(Iden
     (cur.token, nxt.token) match {
       case (SimpleToken.Comma, _: IdentToken) =>
         for {
-          _ <- Parser.skipToken(SimpleToken.Comma)
+          _ <- Parser.eatToken(SimpleToken.Comma)
           identWithLoc <- parseIdentWithLoc()
           result <- parseIdentsListTail(gathered :+ identWithLoc)
         } yield result
@@ -159,12 +280,48 @@ private def parseIdentsListTail(gathered: List[(Ident, Loc)]): Parser[List[(Iden
   }
 
 private type IdentWithTypeAnnotation = ((Ident, Loc), (TypeSystem.BuiltInType, Loc))
+
 private def parseIdentsListWithTypeAnnotation(): Parser[List[IdentWithTypeAnnotation]] =
   for {
     idents <- parseNonEmptyIdentsList()
-    _ <- Parser.skipToken(SimpleToken.Colon)
+    _ <- Parser.eatToken(SimpleToken.Colon)
     typeSpec <- parseTypeSpecWithLoc()
   } yield idents.map { identWithLoc =>
     (identWithLoc, typeSpec)
   }
 
+
+private def parseStmtsListTail(gathered: List[AstStmt]): Parser[List[AstStmt]] =
+  Parser.cur.flatMap { cur =>
+    cur.token match {
+      case SimpleToken.SemiColon =>
+        for {
+          _ <- Parser.eatToken(SimpleToken.SemiColon)
+          stmt <- parseStmt()
+          result <- parseStmtsListTail(gathered :+ stmt)
+        } yield result
+      case _ => Parser.succeed(gathered)
+    }
+  }
+
+private def parseBinOpChain(partParser: () => Parser[AstExpr], mapTokenToOp: Token => Option[TypeSystem.BinOp]) = for {
+  left <- partParser()
+  result <- parseBinOpChainTail(left, partParser, mapTokenToOp)
+} yield result
+
+private def parseBinOpChainTail(
+                                 left: AstExpr,
+                                 partParser: () => Parser[AstExpr],
+                                 mapTokenToOp: Token => Option[TypeSystem.BinOp]
+                               ): Parser[AstExpr] =
+  Parser.cur.flatMap { opToken =>
+    mapTokenToOp(opToken.token) match {
+      case None => Parser.succeed(left)
+      case Some(op) => for {
+        _ <- Parser.eatToken(opToken.token)
+        right <- partParser()
+        node = AstBinOp(left, right, (op, opToken.loc), Loc(left.loc.start, right.loc.end))
+        result <- parseBinOpChainTail(node, partParser, mapTokenToOp)
+      } yield result
+    }
+  }

@@ -31,4 +31,5 @@ object ExpectedConstruct {
   case object TypeSpec extends ExpectedConstruct
   case object Expr extends ExpectedConstruct
   case object Stmt extends ExpectedConstruct
+  case object PrimaryExpr extends ExpectedConstruct
 }

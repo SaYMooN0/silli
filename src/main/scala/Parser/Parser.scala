@@ -39,8 +39,8 @@ object Parser {
       else ParserErr.UnexpectedToken(received, ExpectedTokens.Single(expected)).toParserFail
     }
 
-  def skipToken(expected: Token): Parser[Unit] =
-    eatToken(expected).map(_ => ())
+  def skipAndSucceed[A](t: Token, value: A): Parser[A] = Parser.eatToken(t).map(_ => value)
+
 }
 
 extension (err: ParserErr)
