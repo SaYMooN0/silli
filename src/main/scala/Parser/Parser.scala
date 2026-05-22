@@ -1,7 +1,6 @@
 package Parser
 
 import _root_.Lexer.*
-import _root_.Lexer.Lexer.LexerReadNextResult
 
 
 final case class Parser[+A](run: ParsingCtx => Either[ParserErr, (A, ParsingCtx)]) {
@@ -26,9 +25,10 @@ object Parser {
 
   val cur: Parser[TokenWithLoc[?]] = Parser(ctx => Right((ctx.curT, ctx)))
 
-  val nxt: Parser[TokenWithLoc[?]] = Parser(ctx => Right((ctx.nxtT, ctx)))
+  val nxt: Parser[TokenWithLoc[?] | EndOfReaderReached] = Parser(ctx => Right((ctx.nxtT, ctx)))
 
-  val curAndNxt: Parser[(TokenWithLoc[?], TokenWithLoc[?])] = Parser(ctx => Right(((ctx.curT, ctx.nxtT), ctx)))
+  val curAndNxt: Parser[(TokenWithLoc[?], TokenWithLoc[?] | EndOfReaderReached)] =
+    Parser(ctx => Right(((ctx.curT, ctx.nxtT), ctx)))
 
   private val advance: Parser[Unit] = Parser { ctx => ctx.advance.map { nextCtx => ((), nextCtx) } }
 
@@ -39,10 +39,24 @@ object Parser {
       else ParserErr.UnexpectedToken(received, ExpectedTokens.Single(expected)).toParserFail
     }
 
-  def skipAndSucceed[A](t: Token, value: A): Parser[A] = Parser.eatToken(t).map(_ => value)
+  def eatTokenAsLastInReader(expected: Token): Parser[TokenWithLoc[?]] =
+    Parser.curAndNxt.flatMap { (cur, nxt) =>
+      if cur.token != expected then ParserErr.UnexpectedToken(cur, ExpectedTokens.Single(expected)).toParserFail
+      else nxt match {
+        case _: EndOfReaderReached => Parser.succeed(cur)
+        case receivedNext: TokenWithLoc[?] => ParserErr.ExpectedEndOfReader(receivedNext).toParserFail
+      }
+    }
 
+  def skipAndSucceed[A](t: Token, value: A): Parser[A] = Parser.eatToken(t).map(_ => value)
 }
 
 extension (err: ParserErr)
   def toParserFail: Parser[Nothing] =
     Parser(_ => Left(err))
+
+extension (tokenOrEnd: TokenWithLoc[?] | EndOfReaderReached)
+  def token: Token | EndOfReaderReached =
+    tokenOrEnd match
+      case t: TokenWithLoc[?] => t.token
+      case end: EndOfReaderReached => end

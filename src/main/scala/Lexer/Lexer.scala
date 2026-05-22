@@ -10,7 +10,7 @@ enum TokenizingErr(val pos: Pos) {
   case NumLiteralErr(err: NumLiteralReaderErr) extends TokenizingErr(err.pos)
 }
 
-object EndOfReaderReached;
+final case class EndOfReaderReached(endOfReaderPos: Pos)
 
 object Lexer {
 
@@ -18,13 +18,13 @@ object Lexer {
     readNext
   }
 
-  type LexerReadNextResult = TokenWithLoc[?] | TokenizingErr | EndOfReaderReached.type
+  type LexerReadNextResult = TokenizingErr | TokenWithLoc[?] | EndOfReaderReached
   type LexerReadNextFunc = ReadingCtx => (ReadingCtx, LexerReadNextResult)
 
   private val readNext: LexerReadNextFunc = (ctx: ReadingCtx) => {
     (ctx.current, ctx.next) match {
 
-      case (EOF, _) => (ctx, EndOfReaderReached)
+      case (EOF, _) => (ctx, EndOfReaderReached(ctx.currentPos))
       case ('\n', _) => readNext(ctx.advanceToNewLine())
       case ('\r', '\n') => readNext(ctx.advanceInSameLine().advanceToNewLine())
       case (' ', _) => readNext(ctx.advanceInSameLine())
@@ -94,7 +94,7 @@ object Lexer {
       val (newCtx, tokenRes) = readNext(ctx)
       println(tokenRes)
       tokenRes match {
-        case EndOfReaderReached => ()
+        case e: EndOfReaderReached => ()
         case e: TokenizingErr =>
           throw new Error(s"$e")
         case _ => printTokenAndContinueIfNotEnd(newCtx)

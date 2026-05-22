@@ -22,7 +22,7 @@ private def parseProgramAst(): Parser[AstRoot] =
     programName <- parseIdentWithLoc()
     _ <- Parser.eatToken(SimpleToken.SemiColon)
     block <- parseBlock()
-    _ <- Parser.eatToken(SimpleToken.Dot)
+    _ <- Parser.eatTokenAsLastInReader(SimpleToken.Dot)
   } yield AstRoot(programName, block)
 
 private def parseBlock(): Parser[AstBlock] =
@@ -107,8 +107,8 @@ private def parseStmt(): Parser[AstStmt] =
     (cur.token, nxt.token) match {
       case (SyntaxKeywordToken.Begin, _) => parseCompoundStmt()
       case (SyntaxKeywordToken.If, _) => parseIfStmt()
-      case (ident: IdentToken, SimpleToken.LPar) => parseProcCallStmt()
-      case (ident: IdentToken, SimpleToken.Assign) => parseAssignStmt()
+      case (ident: IdentToken, SimpleToken.LPar) => parseProcCallStmt(ident)
+      case (ident: IdentToken, SimpleToken.Assign) => parseAssignStmt(ident)
       case _ => ParserErr.CouldNotParseExpectedConstruct(cur, ExpectedConstruct.Stmt).toParserFail
     }
   }
@@ -116,9 +116,8 @@ private def parseStmt(): Parser[AstStmt] =
 private def parseCompoundStmt(): Parser[AstCompoundStmt] =
   for {
     beginKw <- Parser.eatToken(SyntaxKeywordToken.Begin)
-    firstStmt <- parseStmt()
-    allStmts <- parseStmtsListTail(List(firstStmt))
-    endKw <- Parser.eatToken(SyntaxKeywordToken.Begin)
+    allStmts <- parseStmtsListTailTillEndKw(List(), isDividerExpected = false)
+    endKw <- Parser.eatToken(SyntaxKeywordToken.End)
   } yield AstCompoundStmt(allStmts, Loc(beginKw.loc.start, endKw.loc.end))
 
 private def parseIfStmt(): Parser[AstIfStmt] =
@@ -143,9 +142,39 @@ private def parseIfStmt(): Parser[AstIfStmt] =
     }
   } yield AstIfStmt(conditionExpr, thenStmt, elseStmt, Loc(ifKw.loc.start, ifStmtEndPos))
 
-private def parseProcCallStmt(): Parser[AstProcCallStmt] = ???
+private def parseProcCallStmt(ident: IdentToken): Parser[AstProcCallStmt] = for {
+  identWithLoc <- Parser.eatToken(ident)
+  _ <- Parser.eatToken(SimpleToken.LPar)
+  params <- parseProcCallParamsList()
+  rPar <- Parser.eatToken(SimpleToken.RPar)
 
-private def parseAssignStmt(): Parser[AstAssignStmt] = ???
+} yield AstProcCallStmt((Ident(ident.ident), identWithLoc.loc), params, Loc(identWithLoc.loc.start, rPar.loc.end))
+
+private def parseProcCallParamsList(): Parser[List[AstExpr]] = Parser.cur.flatMap { cur =>
+  cur.token match {
+    case SimpleToken.RPar => Parser.succeed(List())
+    case _ => for {
+      exprListHead <- parseExpr()
+      allExpr <- parseProcCallParamsTail(List(exprListHead))
+    } yield allExpr
+  }
+}
+private def parseProcCallParamsTail(gathered: List[AstExpr]): Parser[List[AstExpr]] = Parser.cur.flatMap { cur =>
+  cur.token match {
+    case SimpleToken.Comma => for {
+      _ <- Parser.eatToken(cur.token)
+      newExpr <- parseExpr()
+      allExpr <- parseProcCallParamsTail(gathered :+ newExpr)
+    } yield allExpr
+    case _ => Parser.succeed(gathered)
+  }
+}
+
+private def parseAssignStmt(ident: IdentToken): Parser[AstAssignStmt] = for {
+  identWithLoc <- Parser.eatToken(ident)
+  _ <- Parser.eatToken(SimpleToken.Assign)
+  expr <- parseExpr()
+} yield AstAssignStmt(AstVarRef(Ident(ident.ident), identWithLoc.loc), expr, Loc(identWithLoc.loc.start, expr.loc.end))
 //expr
 private def parseExpr(): Parser[AstExpr] = parseOrExpr()
 
@@ -245,7 +274,7 @@ private def parsePrimaryExpr(): Parser[AstExpr] = {
 private def parseIdentWithLoc(): Parser[(Ident, Loc)] =
   Parser.cur.flatMap { received =>
     received.token match {
-      case t: IdentToken => Parser.eatToken(t).map(_ => (Ident(t.ident), received.loc))
+      case t: IdentToken => Parser.skipAndSucceed(t, (Ident(t.ident), received.loc))
       case _ => ParserErr.CouldNotParseExpectedConstruct(received, ExpectedConstruct.Ident).toParserFail
     }
   }
@@ -253,7 +282,7 @@ private def parseIdentWithLoc(): Parser[(Ident, Loc)] =
 private def parseTypeSpecWithLoc(): Parser[(TypeSystem.BuiltInType, Loc)] =
   Parser.cur.flatMap { received =>
     received.token match {
-      case t: BuiltInTypeNameToken => Parser.eatToken(t).map(_ => (t.typeSpec, received.loc))
+      case t: BuiltInTypeNameToken => Parser.skipAndSucceed(t, (t.typeSpec, received.loc))
       case _ => ParserErr.CouldNotParseExpectedConstruct(received, ExpectedConstruct.TypeSpec).toParserFail
     }
   }
@@ -291,16 +320,28 @@ private def parseIdentsListWithTypeAnnotation(): Parser[List[IdentWithTypeAnnota
   }
 
 
-private def parseStmtsListTail(gathered: List[AstStmt]): Parser[List[AstStmt]] =
+private def parseStmtsListTailTillEndKw(gathered: List[AstStmt], isDividerExpected: Boolean): Parser[List[AstStmt]] =
   Parser.cur.flatMap { cur =>
-    cur.token match {
-      case SimpleToken.SemiColon =>
+    (isDividerExpected, cur.token) match {
+      case (_, SyntaxKeywordToken.End) => Parser.succeed(gathered)
+      case (true, SimpleToken.SemiColon) =>
         for {
-          _ <- Parser.eatToken(SimpleToken.SemiColon)
-          stmt <- parseStmt()
-          result <- parseStmtsListTail(gathered :+ stmt)
+          semi <- Parser.eatToken(SimpleToken.SemiColon)
+          result <- parseStmtsListTailTillEndKw(gathered, isDividerExpected = false)
         } yield result
-      case _ => Parser.succeed(gathered)
+      case (false, SimpleToken.SemiColon) =>
+        for {
+          semi <- Parser.eatToken(SimpleToken.SemiColon)
+          result <- parseStmtsListTailTillEndKw(gathered, isDividerExpected = false)
+        } yield result
+      case (true, received) => ParserErr.UnexpectedToken(
+        cur, ExpectedTokens.OneOf(Set(SimpleToken.SemiColon, SyntaxKeywordToken.End))
+      ).toParserFail
+      case (false, _) =>
+        for {
+          stmt <- parseStmt()
+          result <- parseStmtsListTailTillEndKw(gathered :+ stmt, isDividerExpected = true)
+        } yield result
     }
   }
 

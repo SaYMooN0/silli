@@ -6,7 +6,11 @@ var
 procedure CalcFactorial(n : integer; cap :string);
 begin
     if n <= 1 then
-        inter := "empty"
+    begin
+        inter := "empty";
+        ;
+        ;
+    end
     else
     begin
         inter := cap*(n);    
