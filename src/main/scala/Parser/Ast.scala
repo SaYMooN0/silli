@@ -33,17 +33,18 @@ final case class AstFormalParam(
                                  loc: Loc
                                )
 
+//expressions
 sealed trait AstExpr {
   def loc: Loc
 }
 
-final case class BooleanLiteral(value: Boolean, loc: Loc) extends AstExpr
+final case class AstBooleanLiteral(value: Boolean, loc: Loc) extends AstExpr
 
-final case class IntegerLiteral(value: Int, loc: Loc) extends AstExpr
+final case class AstIntegerLiteral(value: Int, loc: Loc) extends AstExpr
 
-final case class RealLiteral(value: Double, loc: Loc) extends AstExpr
+final case class AstRealLiteral(value: Double, loc: Loc) extends AstExpr
 
-final case class StringLiteral(value: String, loc: Loc) extends AstExpr
+final case class AstStringLiteral(value: String, loc: Loc) extends AstExpr
 
 final case class AstUnOp(
                           expr: AstExpr,
@@ -58,10 +59,7 @@ final case class AstBinOp(
                            loc: Loc
                          ) extends AstExpr
 
-final case class AstVarRef(
-                            ident: Ident,
-                            loc: Loc
-                          ) extends AstExpr
+final case class AstVarRef(ident: Ident, loc: Loc) extends AstExpr
 
 final case class Ident(value: String):
   require(
@@ -70,26 +68,16 @@ final case class Ident(value: String):
       && value.tail.forall(IdentRules.canBeInIdentifier)
   )
 
+//statements
 sealed trait AstStmt {
   def loc: Loc
 }
 
-final case class AstCompoundStmt(
-                                  stmt: List[AstStmt],
-                                  loc: Loc
-                                ) extends AstStmt
+final case class AstCompoundStmt(stmts: List[AstStmt], loc: Loc) extends AstStmt
 
-final case class AstAssignStmt(
-                                varRef: AstVarRef,
-                                expr: AstExpr,
-                                loc: Loc
-                              ) extends AstStmt
+final case class AstAssignStmt(varRef: AstVarRef, expr: AstExpr, loc: Loc) extends AstStmt
 
-final case class AstProcCallStmt(
-                                  procName: (Ident, Loc),
-                                  actualParams: List[AstExpr],
-                                  loc: Loc
-                                ) extends AstStmt
+final case class AstProcCallStmt(procName: (Ident, Loc), actualParams: List[AstExpr], loc: Loc) extends AstStmt
 
 final case class AstIfStmt(
                             condition: AstExpr,
@@ -102,9 +90,9 @@ object AstNodeName {
 
   inline def of[A <: AstExpr | AstStmt]: String =
     inline erasedValue[A] match {
-      case _: BooleanLiteral => "boolean literal"
-      case _: RealLiteral => "real literal"
-      case _: StringLiteral => "string literal"
+      case _: AstBooleanLiteral => "boolean literal"
+      case _: AstRealLiteral => "real literal"
+      case _: AstStringLiteral => "string literal"
       case _: AstUnOp => "unary operation expression"
       case _: AstBinOp => "binary operation expression"
       case _: AstVarRef => "variable reference"

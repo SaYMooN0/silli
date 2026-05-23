@@ -1,23 +1,13 @@
-program FactorialProgram;
+program EmptyStatementsTest;
 
 var
-    inter : string;
+    a,b,c : integer;
 
-procedure CalcFactorial(n : integer; cap :string);
+
 begin
-    if n <= 1 then
+    a:=5;
     begin
-        inter := "empty";
-        ;
-        ;
-    end
-    else
-    begin
-        inter := cap*(n);    
-        CalcFactorial(n - 1, cap*(n-1));
     end;
-end;
-
-begin
-    CalcFactorial(4, "-");
+    bb:=2;
+    
 end.

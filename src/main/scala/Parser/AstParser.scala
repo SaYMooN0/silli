@@ -254,11 +254,11 @@ private def parseUnaryExpr(): Parser[AstExpr] = {
 private def parsePrimaryExpr(): Parser[AstExpr] = {
   Parser.cur.flatMap { cur =>
     cur.token match {
-      case l: RealNumLiteralToken => Parser.skipAndSucceed(l, RealLiteral(l.value, cur.loc))
-      case l: IntegerNumLiteralToken => Parser.skipAndSucceed(l, IntegerLiteral(l.value, cur.loc))
-      case l: StringLiteralToken => Parser.skipAndSucceed(l, StringLiteral(l.value, cur.loc))
-      case BooleanLiteralToken.True => Parser.skipAndSucceed(BooleanLiteralToken.True, BooleanLiteral(true, cur.loc))
-      case BooleanLiteralToken.False => Parser.skipAndSucceed(BooleanLiteralToken.False, BooleanLiteral(false, cur.loc))
+      case l: RealNumLiteralToken => Parser.skipAndSucceed(l, AstRealLiteral(l.value, cur.loc))
+      case l: IntegerNumLiteralToken => Parser.skipAndSucceed(l, AstIntegerLiteral(l.value, cur.loc))
+      case l: StringLiteralToken => Parser.skipAndSucceed(l, AstStringLiteral(l.value, cur.loc))
+      case BooleanLiteralToken.True => Parser.skipAndSucceed(BooleanLiteralToken.True, AstBooleanLiteral(true, cur.loc))
+      case BooleanLiteralToken.False => Parser.skipAndSucceed(BooleanLiteralToken.False, AstBooleanLiteral(false, cur.loc))
       case ident: IdentToken => Parser.skipAndSucceed(ident, AstVarRef(Ident(ident.ident), cur.loc))
       case SimpleToken.LPar => for {
         lPar <- Parser.eatToken(cur.token)
