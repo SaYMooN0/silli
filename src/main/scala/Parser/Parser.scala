@@ -51,12 +51,12 @@ object Parser {
   def skipAndSucceed[A](t: Token, value: A): Parser[A] = Parser.eatToken(t).map(_ => value)
 }
 
-extension (err: ParserErr)
-  def toParserFail: Parser[Nothing] =
-    Parser(_ => Left(err))
-
-extension (tokenOrEnd: TokenWithLoc[?] | EndOfReaderReached)
+extension (err: ParserErr) {
+  def toParserFail: Parser[Nothing] = Parser(_ => Left(err))
+}
+extension (tokenOrEnd: TokenWithLoc[?] | EndOfReaderReached) {
   def token: Token | EndOfReaderReached =
     tokenOrEnd match
       case t: TokenWithLoc[?] => t.token
       case end: EndOfReaderReached => end
+}

@@ -63,4 +63,3 @@ final case class VarRefBoundAstNode(varSym: VariableSymbol) extends ExprBoundAst
 final case class UnOpBoundAstNode(inner: ExprBoundAstNode, op: UnOp) extends ExprBoundAstNode
 
 final case class BinOpBoundAstNode(left: ExprBoundAstNode, op: BinOp, right: ExprBoundAstNode) extends ExprBoundAstNode
-

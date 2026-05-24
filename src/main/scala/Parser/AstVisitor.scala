@@ -16,7 +16,7 @@ def constructAst(str: String): Either[ParserErr, AstRoot] = {
 }
 
 
-private def parseProgramAst(): Parser[AstRoot] =
+private def parseProgramAst(): Parser[AstRoot] = {
   for {
     _ <- Parser.eatToken(SyntaxKeywordToken.Program)
     programName <- parseIdentWithLoc()
@@ -24,6 +24,7 @@ private def parseProgramAst(): Parser[AstRoot] =
     block <- parseBlock()
     _ <- Parser.eatTokenAsLastInReader(SimpleToken.Dot)
   } yield AstRoot(programName, block)
+}
 
 private def parseBlock(): Parser[AstBlock] =
   for {
@@ -33,29 +34,36 @@ private def parseBlock(): Parser[AstBlock] =
     compoundStmt <- parseCompoundStmt()
   } yield AstBlock(varDecls, procDecls, compoundStmt, Loc(firstToken.loc.start, compoundStmt.loc.end))
 
-private def parseVarDecls(): Parser[List[AstVarDecl]] = Parser.cur.flatMap { cur =>
-  cur.token match {
-    case SyntaxKeywordToken.Var => Parser.eatToken(cur.token).flatMap(_ => parseVarDeclAndContinue(List()))
-    case _ => Parser.succeed(List())
+private def parseVarDecls(): Parser[List[AstVarDeclGroup]] =
+  Parser.cur.flatMap { cur =>
+    cur.token match {
+      case SyntaxKeywordToken.Var => Parser.eatToken(cur.token).flatMap(_ => parseVarDeclGroupAndContinue(List.empty))
+      case _ => Parser.succeed(List.empty)
+    }
   }
-}
-private def parseVarDeclAndContinue(gathered: List[AstVarDecl]): Parser[List[AstVarDecl]] = {
-  for {
-    identsWithAnnotation <- parseIdentsListWithTypeAnnotation()
-    _ <- Parser.eatToken(SimpleToken.SemiColon)
-    declsWithNew = gathered ++ identsWithAnnotation.map(
-      (ident, typeAnnotation) => AstVarDecl(ident, typeAnnotation, Loc(ident._2.start, typeAnnotation._2.end))
-    )
 
+private def parseVarDeclGroup(): Parser[AstVarDeclGroup] = {
+  for {
+    idents <- parseNonEmptyIdentsList()
+    _ <- Parser.eatToken(SimpleToken.Colon)
+    typeAnnotation <- parseTypeSpecWithLoc()
+    _ <- Parser.eatToken(SimpleToken.SemiColon)
+    varRefs = idents.map { case (ident, loc) => AstVarRef(ident, loc) }
+    groupLoc = Loc(varRefs.head.loc.start, typeAnnotation._2.end)
+  } yield AstVarDeclGroup(varRefs, typeAnnotation, groupLoc)
+}
+
+private def parseVarDeclGroupAndContinue(gatheredReversed: List[AstVarDeclGroup]): Parser[List[AstVarDeclGroup]] = {
+  for {
+    group <- parseVarDeclGroup()
     result <- Parser.cur.flatMap { cur =>
       cur.token match {
-        case _: IdentToken => parseVarDeclAndContinue(declsWithNew)
-        case _ => Parser.succeed(declsWithNew)
+        case _: IdentToken => parseVarDeclGroupAndContinue(group :: gatheredReversed)
+        case _ => Parser.succeed((group :: gatheredReversed).reverse)
       }
     }
   } yield result
 }
-
 private def parseProcDeclAndContinue(gathered: List[AstProcDecl]): Parser[List[AstProcDecl]] = {
   Parser.cur.flatMap { cur =>
     cur.token match {
@@ -101,7 +109,7 @@ private def continueProcDeclFormalParams(gathered: List[AstFormalParam]): Parser
   }
 } yield result
 
-//stmts
+//statements
 private def parseStmt(): Parser[AstStmt] =
   Parser.curAndNxt.flatMap { (cur, nxt) =>
     (cur.token, nxt.token) match {
@@ -175,7 +183,7 @@ private def parseAssignStmt(ident: IdentToken): Parser[AstAssignStmt] = for {
   _ <- Parser.eatToken(SimpleToken.Assign)
   expr <- parseExpr()
 } yield AstAssignStmt(AstVarRef(Ident(ident.ident), identWithLoc.loc), expr, Loc(identWithLoc.loc.start, expr.loc.end))
-//expr
+//expressions
 private def parseExpr(): Parser[AstExpr] = parseOrExpr()
 
 private def parseOrExpr(): Parser[AstExpr] = parseBinOpChain(
@@ -279,10 +287,11 @@ private def parseIdentWithLoc(): Parser[(Ident, Loc)] =
     }
   }
 
-private def parseTypeSpecWithLoc(): Parser[(TypeSystem.BuiltInType, Loc)] =
+private def parseTypeSpecWithLoc(): Parser[(Ident, Loc)] =
   Parser.cur.flatMap { received =>
     received.token match {
-      case t: BuiltInTypeNameToken => Parser.skipAndSucceed(t, (t.typeSpec, received.loc))
+      case t: BuiltInTypeNameToken => Parser.skipAndSucceed(t, (Ident(t.typeSpec.name), received.loc))
+      case ident: IdentToken => Parser.skipAndSucceed(ident, (Ident(ident.ident), received.loc))
       case _ => ParserErr.CouldNotParseExpectedConstruct(received, ExpectedConstruct.TypeSpec).toParserFail
     }
   }
@@ -308,7 +317,7 @@ private def parseIdentsListTail(gathered: List[(Ident, Loc)]): Parser[List[(Iden
     }
   }
 
-private type IdentWithTypeAnnotation = ((Ident, Loc), (TypeSystem.BuiltInType, Loc))
+private type IdentWithTypeAnnotation = ((Ident, Loc), (Ident, Loc))
 
 private def parseIdentsListWithTypeAnnotation(): Parser[List[IdentWithTypeAnnotation]] =
   for {
