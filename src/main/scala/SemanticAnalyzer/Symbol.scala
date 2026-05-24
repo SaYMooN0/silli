@@ -14,6 +14,15 @@ enum TypeSymbol(val spec: BuiltInType) { //only built in types are supported for
   case StringSym extends TypeSymbol(BuiltInType.StringT)
 }
 
+object TypeSymbol {
+  def fromType(t: BuiltInType): TypeSymbol = t match {
+    case BuiltInType.IntegerT => TypeSymbol.IntegerSym
+    case BuiltInType.RealT => TypeSymbol.RealSym
+    case BuiltInType.BooleanT => TypeSymbol.BooleanSym
+    case BuiltInType.StringT => TypeSymbol.StringSym
+  }
+}
+
 final case class VariableSymbol(varName: Ident, typeSym: TypeSymbol, declOrigin: UserDeclOrigin);
 
 final case class ProcedureSymbol(

@@ -1,5 +1,7 @@
 package SemanticAnalyzer
 
+import Parser.Ident
+
 
 final case class SemanticAnalyzer[+A](run: SemanticCtx => (A, SemanticCtx)) {
   def flatMap[B](binder: A => SemanticAnalyzer[B]): SemanticAnalyzer[B] =
@@ -28,7 +30,7 @@ object SemanticAnalyzer {
   def reportErrAndMapNone[A](err: SemanticErr): SemanticAnalyzer[Option[A]] =
     updateCtx(ctx => ctx.copy(errors = ctx.errors :+ err)).map(_ => None)
 
-  def addSymbolToCurrentScope(name: String, symbol: SemanticSymbol): SemanticAnalyzer[Unit] =
+  def addSymbolToCurrentScope(name: Ident, symbol: SemanticSymbol): SemanticAnalyzer[Unit] =
     updateCtx { ctx =>
       val updatedScope: GlobalScopeSymbolTable | ScopedSymbolTable =
         ctx.currentScope match {

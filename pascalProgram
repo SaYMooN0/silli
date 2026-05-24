@@ -1,14 +1,21 @@
-program pr;
+program FeatureStressTest;
 
 var
-    a: integer;
-    b : real;
-    c : real;
-    d : integer;
+  a, b, resultInt : integer;
+  r1, r2 : real;
+  globalBool, flagA, flagB : boolean;
+  globalString, message : string;
 
 begin
-    a :=5
-    b := 2.5
-    c := 2
-    d := 2.5
-end.
+  a := 42;
+  b := 8;
+  resultInt := a+b+a+(a*2);
+  r1:= 1;
+  r2:= 2.2;
+  r1:= r1 + true;
+  r1:= r1 + false;
+  r1:= a+b;
+  r1:= r1< b;
+  r1:= r1< "string";
+  r1:= (r1 + r2)/ (8 div 2);
+  r1:= (r1 div r2)<> (8 div 2.5);

@@ -1,16 +1,18 @@
 package SemanticAnalyzer
 
 import Lexer.Loc
+import Parser.Ident
 
 
 enum SemanticErr(loc: Loc) {
   case SymAlreadyDeclared(newDeclLoc: Loc, existingDecl: SemanticSymbol) extends SemanticErr(newDeclLoc)
 
-  case UndefinedVarSym(varName: String, loc: Loc) extends SemanticErr(loc)
+  case UndeclaredVarSym(varName: Ident, loc: Loc) extends SemanticErr(loc)
   case ExpectedVarSym(receivedSym: SemanticSymbol, receivedSymLoc: Loc) extends SemanticErr(receivedSymLoc)
 
-  case UndefinedTypeSym(typeName: String, loc: Loc) extends SemanticErr(loc)
+  case UndeclaredTypeSym(typeName: Ident, loc: Loc) extends SemanticErr(loc)
   case ExpectedTypeSym(receivedSym: SemanticSymbol, receivedSymLoc: Loc) extends SemanticErr(receivedSymLoc)
 
-  case CannotAssign(goal: TypeSymbol, received: TypeSymbol, assignLoc: Loc) extends SemanticErr(assignLoc)
+  case CannotAssign(target: TypeSymbol, received: TypeSymbol, assignLoc: Loc) extends SemanticErr(assignLoc)
+  case InvalidBinOp(binOp: TypeSystem.BinOp, left: TypeSymbol, right: TypeSymbol, binOpLoc: Loc) extends SemanticErr(binOpLoc)
 }

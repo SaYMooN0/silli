@@ -1,7 +1,9 @@
 package SemanticAnalyzer
 
+import Parser.Ident
+
 sealed trait SymbolTable {
-  def dict: Map[String, SemanticSymbol]
+  def dict: Map[Ident, SemanticSymbol]
 
   def level: Int
 
@@ -9,14 +11,14 @@ sealed trait SymbolTable {
 
   protected def parentOpt: Option[SymbolTable]
 
-  def lookupLocal(name: String): Option[SemanticSymbol] =
-    dict.get(name)
+  def lookupLocal(ident: Ident): Option[SemanticSymbol] =
+    dict.get(ident)
 
-  def lookup(name: String): Option[SemanticSymbol] =
-    dict.get(name).orElse(parentOpt.flatMap(_.lookup(name)))
+  def lookup(ident: Ident): Option[SemanticSymbol] =
+    dict.get(ident).orElse(parentOpt.flatMap(_.lookup(ident)))
 }
 
-final class BuiltinsScopeSymbolTable private(val dict: Map[String, SemanticSymbol]) extends SymbolTable {
+final class BuiltinsScopeSymbolTable private(val dict: Map[Ident, SemanticSymbol]) extends SymbolTable {
 
   override val level: Int = 0
   override val name: String = "builtins"
@@ -26,15 +28,15 @@ final class BuiltinsScopeSymbolTable private(val dict: Map[String, SemanticSymbo
 
 private object BuiltinsScopeSymbolTable {
   def init: BuiltinsScopeSymbolTable = new BuiltinsScopeSymbolTable(Map(
-    TypeSymbol.IntegerSym.spec.name -> TypeSymbol.IntegerSym,
-    TypeSymbol.RealSym.spec.name -> TypeSymbol.RealSym,
-    TypeSymbol.BooleanSym.spec.name -> TypeSymbol.BooleanSym,
-    TypeSymbol.StringSym.spec.name -> TypeSymbol.StringSym
+    Ident(TypeSymbol.IntegerSym.spec.name) -> TypeSymbol.IntegerSym,
+    Ident(TypeSymbol.RealSym.spec.name) -> TypeSymbol.RealSym,
+    Ident(TypeSymbol.BooleanSym.spec.name) -> TypeSymbol.BooleanSym,
+    Ident(TypeSymbol.StringSym.spec.name) -> TypeSymbol.StringSym
   ))
 }
 
 final class GlobalScopeSymbolTable private(
-                                            val dict: Map[String, SemanticSymbol],
+                                            val dict: Map[Ident, SemanticSymbol],
                                             val parent: BuiltinsScopeSymbolTable
                                           ) extends SymbolTable {
 
@@ -43,7 +45,7 @@ final class GlobalScopeSymbolTable private(
 
   override protected def parentOpt: Option[SymbolTable] = Some(parent)
 
-  def withSymbol(symbolName: String, symbol: SemanticSymbol): GlobalScopeSymbolTable =
+  def withSymbol(symbolName: Ident, symbol: SemanticSymbol): GlobalScopeSymbolTable =
     new GlobalScopeSymbolTable(
       dict = dict + (symbolName -> symbol),
       parent = parent
@@ -57,7 +59,7 @@ object GlobalScopeSymbolTable {
 }
 
 final class ScopedSymbolTable private(
-                                       val dict: Map[String, SemanticSymbol],
+                                       val dict: Map[Ident, SemanticSymbol],
                                        val level: Int,
                                        val name: String,
                                        val parent: GlobalScopeSymbolTable | ScopedSymbolTable
@@ -68,7 +70,7 @@ final class ScopedSymbolTable private(
 
   override protected def parentOpt: Option[SymbolTable] = Some(parent)
 
-  def withSymbol(symbolName: String, symbol: SemanticSymbol): ScopedSymbolTable =
+  def withSymbol(symbolName: Ident, symbol: SemanticSymbol): ScopedSymbolTable =
     new ScopedSymbolTable(
       dict = dict + (symbolName -> symbol),
       level = level,
@@ -87,5 +89,4 @@ private object ScopedSymbolTable {
       name = name,
       parent = parent
     )
-  
 }

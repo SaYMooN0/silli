@@ -2,40 +2,26 @@ package TypeSystem.BinOpRules
 
 import TypeSystem.*
 import TypeSystem.ArithmeticBinOps.*
+import TypeSystem.BuiltInType.*
 import TypeSystem.ComparisonBinOps.*
 import TypeSystem.EqualityBinOps.*
-import TypeSystem.BuiltInType.*
 
-object IntegerSupportedBinOps {
-  val rules: List[BinOpRule] =
-    List(
-      BinOpRule(Add, IntegerT, IntegerT),
-      BinOpRule(Sub, IntegerT, IntegerT),
-      BinOpRule(Mul, IntegerT, IntegerT),
+private[TypeSystem] object IntegerSupportedBinOps {
+  val rules: BinOpRulesMap = Map(
+    RealT -> SharedSupportedBinOps.onNumericWhenOneIsReal,
+    IntegerT -> Map(
+      Add -> IntegerT,
+      Sub -> IntegerT,
+      Mul -> IntegerT,
+      IntDivBinOp -> IntegerT,
+      RealDivBinOp -> RealT,
 
-      BinOpRule(Add, RealT, RealT),
-      BinOpRule(Sub, RealT, RealT),
-      BinOpRule(Mul, RealT, RealT),
-
-      BinOpRule(IntDivBinOp, IntegerT, IntegerT),
-      BinOpRule(RealDivBinOp, IntegerT, RealT),
-      BinOpRule(RealDivBinOp, RealT, RealT),
-
-      BinOpRule(Equal, IntegerT, BooleanT),
-      BinOpRule(NotEqual, IntegerT, BooleanT),
-
-      BinOpRule(Equal, RealT, BooleanT),
-      BinOpRule(NotEqual, RealT, BooleanT),
-
-      BinOpRule(Less, IntegerT, BooleanT),
-      BinOpRule(LessOrEqual, IntegerT, BooleanT),
-      BinOpRule(Greater, IntegerT, BooleanT),
-      BinOpRule(GreaterOrEqual, IntegerT, BooleanT),
-
-      BinOpRule(Less, RealT, BooleanT),
-      BinOpRule(LessOrEqual, RealT, BooleanT),
-      BinOpRule(Greater, RealT, BooleanT),
-      BinOpRule(GreaterOrEqual, RealT, BooleanT)
+      Equal -> BooleanT,
+      NotEqual -> BooleanT,
+      Less -> BooleanT,
+      LessOrEqual -> BooleanT,
+      Greater -> BooleanT,
+      GreaterOrEqual -> BooleanT
     )
-
+  )
 }
