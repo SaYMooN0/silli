@@ -3,18 +3,12 @@ package SemanticAnalyzer
 import Lexer.Loc
 import Parser.*
 
-def analyzeAst(str: String): Either[ParserErr | List[SemanticErr], BoundAstRoot] = {
-  constructAst(str) match {
-    case Left(err) => Left(err)
-    case Right(ast) =>
-      val (boundAstRoot, finalCtx) = analyzeAstRoot(ast).run(SemanticCtx.init)
-      val errors = finalCtx.errors.toList
+def analyzeProgramAst(ast: AstRoot): Either[List[SemanticErr], BoundAstRoot] = {
+  val (boundAstRoot, finalCtx) = analyzeAstRoot(ast).run(SemanticCtx.init)
+  val errors = finalCtx.errors.toList
 
-      if (errors.nonEmpty)
-        Left(errors)
-      else
-        Right(boundAstRoot)
-  }
+  if (errors.nonEmpty) Left(errors)
+  else Right(boundAstRoot)
 }
 private def analyzeAstRoot(ast: AstRoot): SemanticAnalyzer[BoundAstRoot] =
   for {

@@ -12,10 +12,4 @@ begin
   resultInt := a+b+a+(a*2);
   r1:= 1;
   r2:= 2.2;
-  r1:= r1 + true;
-  r1:= r1 + false;
-  r1:= a+b;
-  r1:= r1< b;
-  r1:= r1< "string";
-  r1:= (r1 + r2)/ (8 div 2);
-  r1:= (r1 div r2)<> (8 div 2.5);
+end.
