@@ -27,8 +27,12 @@ object SemanticAnalyzer {
   private def updateCtx(updater: SemanticCtx => SemanticCtx): SemanticAnalyzer[Unit] =
     SemanticAnalyzer(ctx => ((), updater(ctx)))
 
+
+  def reportErr(err: SemanticErr): SemanticAnalyzer[Unit] =
+    updateCtx { ctx => ctx.copy(errors = ctx.errors :+ err) }
+
   def reportErrAndMapNone[A](err: SemanticErr): SemanticAnalyzer[Option[A]] =
-    updateCtx(ctx => ctx.copy(errors = ctx.errors :+ err)).map(_ => None)
+    reportErr(err).map(_ => None)
 
   def addSymbolToCurrentScope(name: Ident, symbol: SemanticSymbol): SemanticAnalyzer[Unit] =
     updateCtx { ctx =>

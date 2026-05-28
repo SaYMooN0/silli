@@ -21,12 +21,15 @@ object IOCtx {
 
     val ctx =
       new IOCtx(
-        readLine = () =>
+        readLine = () => {
           if (inputQueue.nonEmpty) inputQueue.dequeue()
-          else throw RuntimeException("No more input lines available"),
+          else throw RuntimeException("No more input lines available")
 
-        writeLine = text =>
+        },
+
+        writeLine = text => {
           outputLines += text
+        }
       )
 
     val getOutput = () => outputLines.toList

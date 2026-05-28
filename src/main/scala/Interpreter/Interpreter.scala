@@ -1,6 +1,7 @@
 package Interpreter
 
 import SemanticAnalyzer.*
+import TypeSystem.Value
 
 
 object InterpretationSuccess;
@@ -26,7 +27,7 @@ private def interpretBlock(block: BlockBoundAstNode): InterpreterRuntime[Unit] =
 
 private def interpretVarDecls(decls: List[VarDeclBoundAstNode]) = InterpreterRuntime.pure(())
 private def interpretProcDecls(decls: List[ProcDeclBoundAstNode]) = InterpreterRuntime.pure(())
-
+//statements
 private def interpretStmt(stmt: StmtBoundAstNode) = stmt match {
   case s: CompoundStmtBoundAstNode => interpretCompoundStmt(s)
   case s: AssignStmtBoundAstNode => interpretAssignStmt(s)
@@ -37,3 +38,14 @@ private def interpretCompoundStmt(compoundStmt: CompoundStmtBoundAstNode) = Inte
 private def interpretAssignStmt(assignStmt: AssignStmtBoundAstNode) = ???
 private def interpretProcCallStmt(procCallStmt: ProcCallStmtBoundAstNode) = ???
 private def interpretIfStmt(ifStmt: IfStmtBoundAstNode) = ???
+//expressions
+private def interpretExpr(expr: ExprBoundAstNode): InterpreterRuntime[Value] = expr match {
+  case BooleanLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.BooleanValue(v))
+  case IntegerLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.IntegerValue(v))
+  case RealLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.RealValue(v))
+  case StringLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.StringValue(v))
+  case e: VarRefBoundAstNode => ???
+  case e: UnOpBoundAstNode => ???
+  case e: BinOpBoundAstNode => ???
+}
+//private def interpretUnOpExpr(expr: UnOpBoundAstNode): InterpreterRuntime[Value] = InterpreterRuntime.pure(())

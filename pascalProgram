@@ -2,14 +2,7 @@ program FeatureStressTest;
 
 var
   a, b, resultInt : integer;
-  r1, r2 : real;
-  globalBool, flagA, flagB : boolean;
-  globalString, message : string;
 
 begin
-  a := 42;
-  b := 8;
-  resultInt := a+b+a+(a*2);
-  r1:= 1;
-  r2:= 2.2;
+  if abc  then ; else begin end
 end.

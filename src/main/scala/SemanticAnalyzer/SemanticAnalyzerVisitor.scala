@@ -20,11 +20,7 @@ private def analyzeBlock(block: AstBlock): SemanticAnalyzer[BlockBoundAstNode] =
     varDecls <- analyzeVarDecls(block.varDecls)
     procDecls <- analyzeProcDecls(block.procDecls)
     compoundStmt <- analyzeCompoundStmt(block.compoundStmt)
-  } yield BlockBoundAstNode(
-    varDecls = varDecls,
-    procDecls = procDecls,
-    compoundStmt = compoundStmt
-  )
+  } yield BlockBoundAstNode(varDecls, procDecls, compoundStmt)
 
 private def analyzeVarDecls(groups: List[AstVarDeclGroup]): SemanticAnalyzer[List[VarDeclBoundAstNode]] =
   groups.traverseAnalyzer(analyzeVarDeclGroup).map(_.flatten)
@@ -77,7 +73,8 @@ private def analyzeStmt(stmt: AstStmt): SemanticAnalyzer[Option[StmtBoundAstNode
   stmt match {
     case s: AstCompoundStmt => analyzeCompoundStmt(s).map(Some(_))
     case s: AstAssignStmt => analyzeAssignStmt(s)
-    case _ => SemanticAnalyzer.pure(None)
+    case s: AstProcCallStmt => analyzeProcCallStmt(s)
+    case s: AstIfStmt => analyzeIfStmt(s)
   }
 }
 private def analyzeCompoundStmt(compoundStmt: AstCompoundStmt): SemanticAnalyzer[CompoundStmtBoundAstNode] = {
@@ -101,13 +98,88 @@ private def analyzeAssignStmt(assignStmt: AstAssignStmt): SemanticAnalyzer[Optio
     result <- (varSymOpt, exprOpt) match {
       case (Some(varSym), Some(expr)) =>
         if (TypeSystem.AssignRules.canBeAssigned(varSym.typeSym.spec, expr.typeSym.spec)) {
-          SemanticAnalyzer.pure(Some(AssignStmtBoundAstNode(varSym = varSym, expr = expr)))
+          SemanticAnalyzer.pure(Some(AssignStmtBoundAstNode(varSym, expr)))
         } else {
           SemanticAnalyzer.reportErrAndMapNone(SemanticErr.CannotAssign(varSym.typeSym, expr.typeSym, assignStmt.loc))
         }
       case _ => SemanticAnalyzer.pure(None)
     }
   } yield result
+}
+private def analyzeIfStmt(ifStmt: AstIfStmt): SemanticAnalyzer[Option[IfStmtBoundAstNode]] = {
+  def analyzeOptionalStmt(stmtOpt: Option[AstStmt]): SemanticAnalyzer[Option[StmtBoundAstNode]] =
+    stmtOpt match {
+      case Some(stmt) => analyzeStmt(stmt)
+      case None => SemanticAnalyzer.pure(Some(CompoundStmtBoundAstNode(List.empty)))
+    }
+
+  for {
+    exprOpt <- analyzeExpr(ifStmt.condition)
+    thenStmtOpt <- analyzeOptionalStmt(ifStmt.thenStmt)
+    elseStmtOpt <- analyzeOptionalStmt(ifStmt.elseStmt)
+
+    result <- exprOpt match {
+      case None => SemanticAnalyzer.pure(None)
+      case Some(TypedExpr(expr, TypeSymbol.BooleanSym)) =>
+        (thenStmtOpt, elseStmtOpt) match {
+          case (Some(thenStmt), Some(elseStmt)) => SemanticAnalyzer.pure(Some(IfStmtBoundAstNode(TypedExpr(expr, TypeSymbol.BooleanSym), thenStmt, elseStmt)))
+          case _ => SemanticAnalyzer.pure(None)
+        }
+      case Some(TypedExpr(_, notBooleanTypeSym)) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.IncorrectType(TypeSymbol.BooleanSym, notBooleanTypeSym, ifStmt.condition.loc))
+    }
+  } yield result
+}
+private def analyzeProcCallStmt(procCallStmt: AstProcCallStmt): SemanticAnalyzer[Option[ProcCallStmtBoundAstNode]] = {
+  for {
+    procSymOpt <- SemanticAnalyzer.currentScope.flatMap { scope =>
+      val (procNameIdent, procNameLoc) = procCallStmt.procName
+      scope.lookup(procNameIdent) match {
+        case Some(procSym: ProcedureSymbol) => SemanticAnalyzer.pure(Some(procSym))
+        case Some(sym) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ExpectedProcSym(sym, procNameLoc))
+        case None => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.UndeclaredVarSym(procNameIdent, procNameLoc))
+      }
+    }
+    analyzedParamOpts <- procCallStmt.actualParams.traverseAnalyzer(analyzeExpr)
+    result <- procSymOpt match {
+      case Some(procSym) => analyzeProcCallWithResolvedProc(procCallStmt, procSym, analyzedParamOpts)
+      case None => SemanticAnalyzer.pure(None)
+    }
+  } yield result
+}
+
+private def analyzeProcCallWithResolvedProc(
+                                             procCallStmt: AstProcCallStmt,
+                                             procSym: ProcedureSymbol,
+                                             analyzedParamOpts: List[Option[AnyTypedExpr]]
+                                           ): SemanticAnalyzer[Option[ProcCallStmtBoundAstNode]] = {
+  val actualParamsCount = procCallStmt.actualParams.length
+  if (procSym.formalParams.length != actualParamsCount) {
+    SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ProcIncorrectActualParamsCount(procSym, procCallStmt.loc, actualParamsCount))
+  } else {
+    for {
+      paramTypeChecks <- procSym.formalParams
+        .zip(procCallStmt.actualParams)
+        .zip(analyzedParamOpts)
+        .traverseAnalyzer({
+          case ((_, _), None) => SemanticAnalyzer.pure(false) // all errors are handled in analyzeExpr
+          case ((formalParam, actualParamAst), Some(actualParamExpr)) =>
+            if (TypeSystem.AssignRules.canBeAssigned(formalParam.typeSym.spec, actualParamExpr.typeSym.spec)) {
+              SemanticAnalyzer.pure(true)
+            } else {
+              SemanticAnalyzer
+                .reportErr(SemanticErr.CannotAssign(formalParam.typeSym, actualParamExpr.typeSym, actualParamAst.loc))
+                .map(_ => false)
+            }
+        })
+      result = {
+        val allExprsWereAnalyzed = analyzedParamOpts.forall(_.isDefined)
+        val allTypesAreCorrect = paramTypeChecks.forall(identity)
+        if (allExprsWereAnalyzed && allTypesAreCorrect) {
+          Some(ProcCallStmtBoundAstNode(procSym, analyzedParamOpts.flatten))
+        } else None
+      }
+    } yield result
+  }
 }
 //expressions
 private def analyzeExpr(expr: AstExpr): SemanticAnalyzer[Option[AnyTypedExpr]] = {
@@ -135,7 +207,23 @@ private def analyzeVarRef(varRef: AstVarRef): SemanticAnalyzer[Option[AnyTypedEx
 
   }
 }
-private def analyzeUnOp(node: AstUnOp): SemanticAnalyzer[Option[AnyTypedExpr]] = ???
+private def analyzeUnOp(node: AstUnOp): SemanticAnalyzer[Option[AnyTypedExpr]] = {
+  for {
+    innerExpr <- analyzeExpr(node.expr)
+    result <- innerExpr match {
+      case Some(TypedExpr(innerExpr, exprType)) =>
+        TypeSystem.inferUnOpResultType(exprType.spec, node.op._1) match {
+          case None => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.InvalidUnOp(
+            node.op._1, exprType, node.op._2
+          ))
+          case Some(resultType) => SemanticAnalyzer.pure(Some(TypedExpr(
+            UnOpBoundAstNode(innerExpr, node.op._1), TypeSymbol.fromType(resultType)
+          )))
+        }
+      case _ => SemanticAnalyzer.pure(None)
+    }
+  } yield result
+}
 private def analyzeBinOp(node: AstBinOp): SemanticAnalyzer[Option[AnyTypedExpr]] = {
   for {
     leftExpr <- analyzeExpr(node.left)

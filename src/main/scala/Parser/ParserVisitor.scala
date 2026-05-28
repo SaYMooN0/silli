@@ -128,27 +128,41 @@ private def parseCompoundStmt(): Parser[AstCompoundStmt] =
     endKw <- Parser.eatToken(SyntaxKeywordToken.End)
   } yield AstCompoundStmt(allStmts, Loc(beginKw.loc.start, endKw.loc.end))
 
-private def parseIfStmt(): Parser[AstIfStmt] =
+private def parseIfStmt(): Parser[AstIfStmt] = {
   for {
     ifKw <- Parser.eatToken(SyntaxKeywordToken.If)
     conditionExpr <- parseExpr()
-    _ <- Parser.eatToken(SyntaxKeywordToken.Then)
-    thenStmt <- parseStmt()
-    elseStmt: Option[AstStmt] <- Parser.cur.flatMap { cur =>
+    thenKw <- Parser.eatToken(SyntaxKeywordToken.Then)
+    thenStmt <- parseOptionalThenStmt()
+    elseStmt <- Parser.cur.flatMap { cur =>
       cur.token match {
-        case SyntaxKeywordToken.Else => for {
-          _ <- Parser.eatToken(SyntaxKeywordToken.Else)
-          stmt <- parseStmt()
-        } yield Some(stmt)
+        case SyntaxKeywordToken.Else =>
+          for {
+            _ <- Parser.eatToken(SyntaxKeywordToken.Else)
+            stmt <- parseStmt()
+          } yield Some(stmt)
 
         case _ => Parser.succeed(None)
       }
     }
-    ifStmtEndPos = elseStmt match {
-      case Some(stmt) => stmt.loc.end
-      case None => thenStmt.loc.end
+    fullStmtEndPos =
+      elseStmt
+        .map(_.loc.end)
+        .orElse(thenStmt.map(_.loc.end))
+        .getOrElse(thenKw.loc.end)
+
+  } yield AstIfStmt(conditionExpr, thenStmt, elseStmt, Loc(ifKw.loc.start, fullStmtEndPos))
+}
+private def parseOptionalThenStmt(): Parser[Option[AstStmt]] = {
+  Parser.curAndNxt.flatMap { (cur, nxt) =>
+    (cur.token, nxt.token) match {
+      case (SyntaxKeywordToken.Else, _) => Parser.succeed(None)
+      case (SimpleToken.SemiColon, SyntaxKeywordToken.Else) => Parser.eatToken(SimpleToken.SemiColon).map(_ => None)
+      case (SimpleToken.SemiColon, _) => Parser.succeed(None)
+      case _ => parseStmt().map(stmt => Some(stmt))
     }
-  } yield AstIfStmt(conditionExpr, thenStmt, elseStmt, Loc(ifKw.loc.start, ifStmtEndPos))
+  }
+}
 
 private def parseProcCallStmt(ident: IdentToken): Parser[AstProcCallStmt] = for {
   identWithLoc <- Parser.eatToken(ident)

@@ -2,7 +2,7 @@ package Interpreter
 
 import Parser.Ident
 import SemanticAnalyzer.{ProcDeclBoundAstNode, ProcedureId}
-import TypeSystem.BuiltInType
+import TypeSystem.{BuiltInType, Value}
 
 import scala.collection.mutable
 
@@ -42,12 +42,7 @@ enum ArType {
   case Procedure;
 }
 
-enum Value(t: BuiltInType) {
-  case RealValue(v: Double) extends Value(BuiltInType.RealT)
-  case IntegerValue(v: Int) extends Value(BuiltInType.IntegerT)
-  case StringValue(v: String) extends Value(BuiltInType.StringT)
-  case BooleanValue(v: Boolean) extends Value(BuiltInType.BooleanT)
-}
+
 
 
 final case class ProcedureClosure(declarationNode: ProcDeclBoundAstNode, definingAr: ActivationRecord); 

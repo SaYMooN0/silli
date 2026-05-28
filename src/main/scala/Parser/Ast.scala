@@ -81,7 +81,7 @@ final case class AstProcCallStmt(procName: (Ident, Loc), actualParams: List[AstE
 
 final case class AstIfStmt(
                             condition: AstExpr,
-                            thenStmt: AstStmt,
+                            thenStmt: Option[AstStmt],
                             elseStmt: Option[AstStmt],
                             loc: Loc
                           ) extends AstStmt

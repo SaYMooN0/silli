@@ -38,3 +38,31 @@ enum LogicBinOps {
   case Xor extends LogicBinOps()
 }
 
+
+object BinOpRules {
+  private[TypeSystem] type BinOpRulesMap = Map[BuiltInType, Map[BinOp, Rule]]
+
+  private[TypeSystem] final case class Rule(resultType: BuiltInType, apply: (Value, Value) => Option[Value])
+
+  private val rulesByLeftType: Map[BuiltInType, BinOpRulesMap] = Map(
+    BuiltInType.IntegerT -> binoprules.IntegerBinOpRules.rules,
+    BuiltInType.RealT -> binoprules.RealBinOpRules.rules,
+    BuiltInType.BooleanT -> binoprules.BooleanBinOpRules.rules,
+    BuiltInType.StringT -> binoprules.StringBinOpRules.rules
+  )
+
+  private def supportedFor(leftType: BuiltInType): BinOpRulesMap =
+    rulesByLeftType.getOrElse(leftType, Map.empty)
+
+  def inferResultType(leftType: BuiltInType, op: BinOp, rightType: BuiltInType): Option[BuiltInType] =
+    supportedFor(leftType)
+      .get(rightType)
+      .flatMap(_.get(op))
+      .map(_.resultType)
+
+  def applyOp(left: Value, op: BinOp, right: Value): Option[Value] =
+    supportedFor(left.t)
+      .get(right.t)
+      .flatMap(_.get(op))
+      .flatMap(_.apply(left, right))
+}
