@@ -4,11 +4,11 @@ import Parser.Ident
 
 final class RuntimeCtx private(
                                 val io: IOCtx,
-                                val callStack: CallStack
+                                val callstack: Callstack
                               )
 
 object RuntimeCtx {
-  def init(programName: Ident, io: IOCtx) = new RuntimeCtx(io, CallStack.init(programName))
+  def init(programName: Ident, io: IOCtx) = new RuntimeCtx(io, Callstack.init(programName))
 }
 
 final case class InterpreterRuntime[+A](run: RuntimeCtx => Either[RuntimeErr, (A, RuntimeCtx)]) {
@@ -34,17 +34,17 @@ object InterpreterRuntime {
   def fail(err: RuntimeErr): InterpreterRuntime[Nothing] =
     InterpreterRuntime(_ => Left(err))
 
-  //  def currentCtx: InterpreterRuntime[RuntimeCtx] =
-  //    InterpreterRuntime(ctx => Right((ctx, ctx)))
-  //
+  private def currentCtx: InterpreterRuntime[RuntimeCtx] =
+    InterpreterRuntime(ctx => Right((ctx, ctx)))
+
   //  def updateCtx(updater: RuntimeCtx => RuntimeCtx): InterpreterRuntime[Unit] =
   //    InterpreterRuntime { ctx =>
   //      Right(((), updater(ctx)))
   //    }
   //
-  //  def currentCallStack: InterpreterRuntime[CallStack] =
-  //    currentCtx.map(_.callStack)
-  //
+  def callstack: InterpreterRuntime[Callstack] =
+    currentCtx.map(_.callstack)
+
   //  def updateCallStack(updater: CallStack => CallStack): InterpreterRuntime[Unit] =
   //    updateCtx(ctx => ctx.copy(callStack = updater(ctx.callStack)))
   //

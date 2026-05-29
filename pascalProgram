@@ -2,6 +2,7 @@ program FeatureStressTest;
 
 var
   a, b, resultInt : integer;
+  abc : boolean;
 
 begin
   if abc  then ; else begin end

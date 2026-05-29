@@ -44,8 +44,27 @@ private def interpretExpr(expr: ExprBoundAstNode): InterpreterRuntime[Value] = e
   case IntegerLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.IntegerValue(v))
   case RealLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.RealValue(v))
   case StringLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.StringValue(v))
-  case e: VarRefBoundAstNode => ???
-  case e: UnOpBoundAstNode => ???
-  case e: BinOpBoundAstNode => ???
+  case e: VarRefBoundAstNode => interpretVarRefExpr(e)
+  case e: UnOpBoundAstNode => interpretUnOpExpr(e)
+  case e: BinOpBoundAstNode => interpretBinOpExpr(e)
 }
-//private def interpretUnOpExpr(expr: UnOpBoundAstNode): InterpreterRuntime[Value] = InterpreterRuntime.pure(())
+private def interpretVarRefExpr(expr: VarRefBoundAstNode): InterpreterRuntime[Value] = InterpreterRuntime.callstack.flatMap(
+  callstack: Callstack => {
+    callstack.
+  }
+)
+private def interpretUnOpExpr(expr: UnOpBoundAstNode): InterpreterRuntime[Value] = for {
+  innerExpr <- interpretExpr(expr.inner)
+  result <- TypeSystem.UnOpRules.applyOp(expr.op, innerExpr) match {
+    case Some(res) => InterpreterRuntime.pure(res)
+    case None => throw new Error(s"Unsupported unary operations must not pass the semantic analyzer: $expr")
+  }
+} yield result
+private def interpretBinOpExpr(expr: BinOpBoundAstNode): InterpreterRuntime[Value] = for {
+  left <- interpretExpr(expr.left)
+  right <- interpretExpr(expr.right)
+  result <- TypeSystem.BinOpRules.applyOp(left, expr.op, right) match {
+    case Some(res) => InterpreterRuntime.pure(res)
+    case None => throw new Error(s"Unsupported binary operations must not pass the semantic analyzer: $expr")
+  }
+} yield result

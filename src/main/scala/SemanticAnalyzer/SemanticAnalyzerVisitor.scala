@@ -212,7 +212,7 @@ private def analyzeUnOp(node: AstUnOp): SemanticAnalyzer[Option[AnyTypedExpr]] =
     innerExpr <- analyzeExpr(node.expr)
     result <- innerExpr match {
       case Some(TypedExpr(innerExpr, exprType)) =>
-        TypeSystem.inferUnOpResultType(exprType.spec, node.op._1) match {
+        TypeSystem.UnOpRules.inferResultType(exprType.spec, node.op._1) match {
           case None => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.InvalidUnOp(
             node.op._1, exprType, node.op._2
           ))
@@ -230,7 +230,7 @@ private def analyzeBinOp(node: AstBinOp): SemanticAnalyzer[Option[AnyTypedExpr]]
     rightExpr <- analyzeExpr(node.right)
     result <- (leftExpr, rightExpr) match {
       case (Some(TypedExpr(lExpr, lType)), Some(TypedExpr(rExpr, rType))) =>
-        TypeSystem.inferBinOpResultType(lType.spec, node.op._1, rType.spec) match {
+        TypeSystem.BinOpRules.inferResultType(lType.spec, node.op._1, rType.spec) match {
           case None => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.InvalidBinOp(
             node.op._1, lType, rType, node.op._2
           ))
