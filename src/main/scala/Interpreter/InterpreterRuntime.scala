@@ -1,5 +1,6 @@
 package Interpreter
 
+import Lexer.Loc
 import Parser.Ident
 
 final class RuntimeCtx private(
@@ -34,23 +35,11 @@ object InterpreterRuntime {
   def fail(err: RuntimeErr): InterpreterRuntime[Nothing] =
     InterpreterRuntime(_ => Left(err))
 
+  def failWIthInternalErr(loc: Loc, message: String): InterpreterRuntime[Nothing] =
+    InterpreterRuntime(_ => Left(RuntimeErr.InternalInterpreterErr(loc, message)))
+
   private def currentCtx: InterpreterRuntime[RuntimeCtx] =
     InterpreterRuntime(ctx => Right((ctx, ctx)))
-
-  //  def updateCtx(updater: RuntimeCtx => RuntimeCtx): InterpreterRuntime[Unit] =
-  //    InterpreterRuntime { ctx =>
-  //      Right(((), updater(ctx)))
-  //    }
-  //
   def callstack: InterpreterRuntime[Callstack] =
     currentCtx.map(_.callstack)
-
-  //  def updateCallStack(updater: CallStack => CallStack): InterpreterRuntime[Unit] =
-  //    updateCtx(ctx => ctx.copy(callStack = updater(ctx.callStack)))
-  //
-  //  def readLine: InterpreterRuntime[String] =
-  //    currentCtx.map(_.io.readLine())
-  //
-  //  def writeLine(text: String): InterpreterRuntime[Unit] =
-  //    currentCtx.map(_.io.writeLine(text))
 }

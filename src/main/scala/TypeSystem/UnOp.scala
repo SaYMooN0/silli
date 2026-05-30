@@ -33,7 +33,7 @@ object UnOpRules {
 
   private def boolToBoolRule(f: Boolean => Value): Rule =
     Rule(
-      BuiltInType.BooleanT, BuiltInType.RealT,
+      BuiltInType.BooleanT, BuiltInType.BooleanT,
       apply = {
         case Value.BooleanValue(v) => Some(f(v))
         case _ => None

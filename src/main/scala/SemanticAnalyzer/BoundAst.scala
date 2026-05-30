@@ -13,23 +13,24 @@ final case class BlockBoundAstNode(
                                     compoundStmt: CompoundStmtBoundAstNode
                                   )
 
-final case class VarDeclBoundAstNode(varSym: VariableSymbol);
+final case class VarDeclBoundAstNode(varSym: VariableSymbol, symLoc: Loc);
 
-final case class ProcDeclBoundAstNode(procSym: ProcedureSymbol, block: BlockBoundAstNode);
+final case class ProcDeclBoundAstNode(procSym: ProcedureSymbol, symLoc: Loc, block: BlockBoundAstNode);
 
 
 //statements
 
 sealed trait StmtBoundAstNode;
 
-final case class CompoundStmtBoundAstNode(stmt: List[StmtBoundAstNode]) extends StmtBoundAstNode
+final case class CompoundStmtBoundAstNode(stmts: List[StmtBoundAstNode]) extends StmtBoundAstNode
 
-final case class AssignStmtBoundAstNode(varSym: VariableSymbol, expr: AnyTypedExpr) extends StmtBoundAstNode
+final case class AssignStmtBoundAstNode(varSym: VariableSymbol, typedExpr: AnyTypedExpr) extends StmtBoundAstNode
 
-final case class ProcCallStmtBoundAstNode(procSym: ProcedureSymbol, actualParams: List[AnyTypedExpr]) extends StmtBoundAstNode
+final case class ProcCallStmtBoundAstNode(procSym: ProcedureSymbol, actualParams: List[AnyTypedExpr], loc: Loc) extends StmtBoundAstNode
 
 final case class IfStmtBoundAstNode(
                                      condition: BooleanTypedExpr,
+                                     conditionLoc: Loc,
                                      thenStmt: StmtBoundAstNode,
                                      elseStmt: StmtBoundAstNode
                                    ) extends StmtBoundAstNode
@@ -58,7 +59,7 @@ final case class RealLiteralBoundAstNode(value: Double) extends ExprBoundAstNode
 
 final case class StringLiteralBoundAstNode(value: String) extends ExprBoundAstNode
 
-final case class VarRefBoundAstNode(varSym: VariableSymbol) extends ExprBoundAstNode
+final case class VarRefBoundAstNode(varSym: VariableSymbol, loc: Loc) extends ExprBoundAstNode
 
 final case class UnOpBoundAstNode(inner: ExprBoundAstNode, op: UnOp) extends ExprBoundAstNode
 

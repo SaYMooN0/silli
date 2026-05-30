@@ -1,9 +1,185 @@
 program FeatureStressTest;
 
 var
-  a, b, resultInt : integer;
-  abc : boolean;
+  globalInt, counter, resultInt : integer;
+  globalReal, resultReal : real;
+  globalBool, flagA, flagB : boolean;
+  globalString, message : string;
+
+procedure NoParams;
+var
+  localInt : integer;
+  localBool : boolean;
+begin
+  localInt := 10;
+  localBool := true;
+
+  if localBool then
+  begin
+    counter := counter + localInt;
+  end
+  else
+  begin
+    counter := counter - localInt;
+  end;
+end;
+
+procedure UseAllTypes(
+  pInt : integer;
+  pReal : real;
+  pBool : boolean;
+  pString : string
+);
+var
+  x, y, z : integer;
+  r1, r2 : real;
+  b1, b2, b3 : boolean;
+  s1, s2 : string;
+
+  procedure NestedOne(n : integer);
+  var
+    nestedInt : integer;
+    nestedBool : boolean;
+  begin
+    nestedInt := n * 2;
+    nestedBool := nestedInt >= 10;
+
+    if nestedBool then
+    begin
+      resultInt := resultInt + nestedInt;
+    end
+    else
+    begin
+      resultInt := resultInt - nestedInt;
+    end;
+  end;
+
+  procedure NestedTwo;
+  var
+    shadowed : integer;
+  begin
+    shadowed := 100;
+
+    if pBool then
+    begin
+      resultReal := resultReal + pReal;
+    end
+    else
+    begin
+      resultReal := resultReal - pReal;
+    end;
+  end;
 
 begin
-  if abc  then ; else begin end
+  x := 1;
+  y := 2;
+  z := 3;
+
+  r1 := 1.5;
+  r2 := 2.25;
+
+  b1 := true;
+  b2 := false;
+  b3 := not b2;
+
+  s1 := "hello";
+  s2 := "world";
+
+  resultInt := x + y * z;
+  resultInt := (x + y) * z;
+  resultInt := resultInt - 5;
+  resultInt := -resultInt;
+
+  resultReal := r1 + r2;
+  resultReal := r1 * r2;
+  resultReal := resultReal / 2.0;
+  resultReal := -resultReal;
+
+  globalBool := x < y;
+  globalBool := x <= y;
+  globalBool := x > y;
+  globalBool := x >= y;
+  globalBool := x = y;
+  globalBool := x <> y;
+
+  flagA := b1 and b3;
+  flagB := b1 or b2;
+  globalBool := not flagB;
+
+  if (x < y) and pBool then
+  begin
+    message := pString;
+    NestedOne(x + y);
+  end
+  else
+  begin
+    message := "else branch";
+    NestedTwo();
+  end;
+
+  if resultInt <> 0 then
+  begin
+    if globalBool then
+    begin
+      resultInt := resultInt + 1;
+    end
+    else
+    begin
+      resultInt := resultInt - 1;
+    end;
+  end;
+end;
+
+procedure ShadowingTest(value : integer);
+var
+  globalInt : integer;
+  localString : string;
+begin
+  globalInt := value;
+  localString := "local shadowing test";
+
+  if globalInt = value then
+  begin
+    message := localString;
+  end
+  else
+  begin
+    message := "unexpected";
+  end;
+end;
+
+begin
+  globalInt := 42;
+  counter := 0;
+  resultInt := 0;
+
+  globalReal := 3.14;
+  resultReal := 0.0;
+
+  globalBool := false;
+  flagA := true;
+  flagB := false;
+
+  globalString := "start";
+  message := "main";
+
+  NoParams();
+
+  UseAllTypes(
+    globalInt,
+    globalReal,
+    true,
+    "called from main"
+  );
+
+  ShadowingTest(123);
+
+  if resultInt > 10 then
+  begin
+    message := "big result";
+  end
+  else
+  begin
+    message := "small result";
+  end;
 end.

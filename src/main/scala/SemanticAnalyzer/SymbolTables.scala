@@ -90,3 +90,18 @@ private object ScopedSymbolTable {
       parent = parent
     )
 }
+
+extension (scope: GlobalScopeSymbolTable | ScopedSymbolTable)
+  def createChildScopeFromCurrent(name: String): ScopedSymbolTable = {
+    scope match {
+      case global: GlobalScopeSymbolTable => global.createChildScope(name)
+      case scoped: ScopedSymbolTable => scoped.createChildScope(name)
+    }
+  }
+
+  def withSymbolInCurrentScope(symbolName: Ident, symbol: SemanticSymbol): GlobalScopeSymbolTable | ScopedSymbolTable = {
+    scope match {
+      case global: GlobalScopeSymbolTable => global.withSymbol(symbolName, symbol)
+      case scoped: ScopedSymbolTable => scoped.withSymbol(symbolName, symbol)
+    }
+  }

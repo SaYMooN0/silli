@@ -27,14 +27,14 @@ private def analyzeVarDecls(groups: List[AstVarDeclGroup]): SemanticAnalyzer[Lis
 
 private def analyzeVarDeclGroup(group: AstVarDeclGroup): SemanticAnalyzer[List[VarDeclBoundAstNode]] = {
   for {
-    typeSymOpt <- analyzeVarDeclGroupTypeAnnotation(group.typeAnnotation)
+    typeSymOpt <- analyzeTypeSpec(group.typeAnnotation)
     decls <- group.varRefs.traverseAnalyzerOpt { varRef =>
       analyzeVarDeclInGroup(varRef, typeSymOpt)
     }
   } yield decls
 }
 
-private def analyzeVarDeclGroupTypeAnnotation(typeAnnotation: (Ident, Loc)): SemanticAnalyzer[Option[TypeSymbol]] = {
+private def analyzeTypeSpec(typeAnnotation: (Ident, Loc)): SemanticAnalyzer[Option[TypeSymbol]] = {
   SemanticAnalyzer.currentScope.flatMap { scope =>
     val typeIdent = typeAnnotation._1
     val typeLoc = typeAnnotation._2
@@ -59,15 +59,88 @@ private def analyzeVarDeclInGroup(
         val varSym = VariableSymbol(varRef.ident, typeSym, UserDeclOrigin(varRef.loc))
         SemanticAnalyzer
           .addSymbolToCurrentScope(varIdent, varSym)
-          .map(_ => Some(VarDeclBoundAstNode(varSym)))
+          .map(_ => Some(VarDeclBoundAstNode(varSym, varRef.loc)))
       }
       case (None, _) => SemanticAnalyzer.pure(None)
     }
   }
 }
-private def analyzeProcDecls(decls: List[AstProcDecl]): SemanticAnalyzer[List[ProcDeclBoundAstNode]] =
-  SemanticAnalyzer.pure(List.empty)
+private def analyzeProcDecls(decls: List[AstProcDecl]): SemanticAnalyzer[List[ProcDeclBoundAstNode]] = {
+  decls.foldLeft(SemanticAnalyzer.pure(List.empty[ProcDeclBoundAstNode])) {
+    case (acc, decl) =>
+      for {
+        gathered <- acc
+        analyzedOpt <- analyzeProcDecl(decl)
+      } yield analyzedOpt match {
+        case Some(analyzed) => gathered :+ analyzed
+        case None => gathered
+      }
+  }
+}
 
+private def analyzeProcDecl(procDecl: AstProcDecl): SemanticAnalyzer[Option[ProcDeclBoundAstNode]] = {
+  SemanticAnalyzer.currentScope.flatMap { parentScope =>
+    val (procIdent, procIdentLoc) = procDecl.procName
+
+    parentScope.lookupLocal(procIdent) match {
+      case Some(alreadyDeclared) =>
+        SemanticAnalyzer.reportErrAndMapNone(
+          SemanticErr.SymAlreadyDeclared(procIdentLoc, alreadyDeclared)
+        )
+
+      case None =>
+        for {
+          formalParamOpts <- SemanticAnalyzer.withScope(parentScope.createChildScopeFromCurrent(procIdent.value)) {
+            analyzeProcDeclFormalParams(procDecl.formalParams)
+          }
+
+          formalParams = formalParamOpts.flatten
+          procId <- SemanticAnalyzer.nextProcedureId
+          procSym = ProcedureSymbol(
+            id = procId,
+            procName = procIdent,
+            formalParams = formalParams,
+            scopeLevel = parentScope.level,
+            decl = UserDeclOrigin(procIdentLoc)
+          )
+
+          _ <- SemanticAnalyzer.addSymbolToCurrentScope(procIdent, procSym)
+          parentScopeWithProc <- SemanticAnalyzer.currentScope
+          procScopeWithParams = formalParams.foldLeft(
+            parentScopeWithProc.createChildScopeFromCurrent(procIdent.value)
+          ) { (scope, paramSym) => scope.withSymbol(paramSym.varName, paramSym) }
+          block <- SemanticAnalyzer.withScope(procScopeWithParams) {
+            analyzeBlock(procDecl.block)
+          }
+        } yield Some(ProcDeclBoundAstNode(procSym, procIdentLoc, block))
+    }
+  }
+}
+private def analyzeProcDeclFormalParams(params: List[AstFormalParam]): SemanticAnalyzer[List[Option[VariableSymbol]]] = {
+  params.foldLeft(SemanticAnalyzer.pure(List.empty[Option[VariableSymbol]])) {
+    case (acc, param) =>
+      for {
+        gathered <- acc
+        analyzed <- analyzeProcDeclFormalParam(param)
+      } yield gathered :+ analyzed
+  }
+}
+private def analyzeProcDeclFormalParam(param: AstFormalParam): SemanticAnalyzer[Option[VariableSymbol]] = {
+  SemanticAnalyzer.currentScope.flatMap { scope =>
+    val (paramIdent, paramIdentLoc) = param.varRef
+    analyzeTypeSpec(param.typeAnnotation).flatMap { typeSymOpt =>
+      (scope.lookupLocal(paramIdent), typeSymOpt) match {
+        case (Some(alreadyDeclared), _) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.SymAlreadyDeclared(paramIdentLoc, alreadyDeclared))
+        case (None, Some(typeSym)) =>
+          val paramSym = VariableSymbol(paramIdent, typeSym, UserDeclOrigin(paramIdentLoc))
+          SemanticAnalyzer
+            .addSymbolToCurrentScope(paramIdent, paramSym)
+            .map(_ => Some(paramSym))
+        case (None, None) => SemanticAnalyzer.pure(None)
+      }
+    }
+  }
+}
 //statements
 private def analyzeStmt(stmt: AstStmt): SemanticAnalyzer[Option[StmtBoundAstNode]] = {
   stmt match {
@@ -96,11 +169,11 @@ private def analyzeAssignStmt(assignStmt: AstAssignStmt): SemanticAnalyzer[Optio
     exprOpt <- analyzeExpr(assignStmt.expr)
 
     result <- (varSymOpt, exprOpt) match {
-      case (Some(varSym), Some(expr)) =>
-        if (TypeSystem.AssignRules.canBeAssigned(varSym.typeSym.spec, expr.typeSym.spec)) {
-          SemanticAnalyzer.pure(Some(AssignStmtBoundAstNode(varSym, expr)))
+      case (Some(varSym), Some(exprWithType)) =>
+        if (TypeSystem.AssignRules.canBeAssigned(varSym.typeSym.spec, exprWithType.typeSym.spec)) {
+          SemanticAnalyzer.pure(Some(AssignStmtBoundAstNode(varSym, exprWithType)))
         } else {
-          SemanticAnalyzer.reportErrAndMapNone(SemanticErr.CannotAssign(varSym.typeSym, expr.typeSym, assignStmt.loc))
+          SemanticAnalyzer.reportErrAndMapNone(SemanticErr.CannotAssign(varSym.typeSym, exprWithType.typeSym, assignStmt.loc))
         }
       case _ => SemanticAnalyzer.pure(None)
     }
@@ -122,7 +195,9 @@ private def analyzeIfStmt(ifStmt: AstIfStmt): SemanticAnalyzer[Option[IfStmtBoun
       case None => SemanticAnalyzer.pure(None)
       case Some(TypedExpr(expr, TypeSymbol.BooleanSym)) =>
         (thenStmtOpt, elseStmtOpt) match {
-          case (Some(thenStmt), Some(elseStmt)) => SemanticAnalyzer.pure(Some(IfStmtBoundAstNode(TypedExpr(expr, TypeSymbol.BooleanSym), thenStmt, elseStmt)))
+          case (Some(thenStmt), Some(elseStmt)) => SemanticAnalyzer.pure(Some(IfStmtBoundAstNode(
+            TypedExpr(expr, TypeSymbol.BooleanSym), ifStmt.condition.loc, thenStmt, elseStmt
+          )))
           case _ => SemanticAnalyzer.pure(None)
         }
       case Some(TypedExpr(_, notBooleanTypeSym)) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.IncorrectType(TypeSymbol.BooleanSym, notBooleanTypeSym, ifStmt.condition.loc))
@@ -136,7 +211,7 @@ private def analyzeProcCallStmt(procCallStmt: AstProcCallStmt): SemanticAnalyzer
       scope.lookup(procNameIdent) match {
         case Some(procSym: ProcedureSymbol) => SemanticAnalyzer.pure(Some(procSym))
         case Some(sym) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ExpectedProcSym(sym, procNameLoc))
-        case None => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.UndeclaredVarSym(procNameIdent, procNameLoc))
+        case None => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.UndeclaredProcSym(procNameIdent, procNameLoc))
       }
     }
     analyzedParamOpts <- procCallStmt.actualParams.traverseAnalyzer(analyzeExpr)
@@ -175,7 +250,7 @@ private def analyzeProcCallWithResolvedProc(
         val allExprsWereAnalyzed = analyzedParamOpts.forall(_.isDefined)
         val allTypesAreCorrect = paramTypeChecks.forall(identity)
         if (allExprsWereAnalyzed && allTypesAreCorrect) {
-          Some(ProcCallStmtBoundAstNode(procSym, analyzedParamOpts.flatten))
+          Some(ProcCallStmtBoundAstNode(procSym, analyzedParamOpts.flatten, procCallStmt.loc))
         } else None
       }
     } yield result
@@ -199,7 +274,7 @@ private def analyzeVarRef(varRef: AstVarRef): SemanticAnalyzer[Option[AnyTypedEx
     scope =>
       scope.lookup(varIdent) match {
         case Some(varSym: VariableSymbol) => SemanticAnalyzer.pure(Some(TypedExpr(
-          VarRefBoundAstNode(varSym), varSym.typeSym
+          VarRefBoundAstNode(varSym, varRef.loc), varSym.typeSym
         )))
         case Some(sym) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ExpectedVarSym(sym, varRef.loc))
         case None => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.UndeclaredVarSym(varIdent, varRef.loc))
