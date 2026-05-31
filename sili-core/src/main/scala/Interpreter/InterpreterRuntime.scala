@@ -35,7 +35,7 @@ object InterpreterRuntime {
   def fail(err: RuntimeErr): InterpreterRuntime[Nothing] =
     InterpreterRuntime(_ => Left(err))
 
-  def failWIthInternalErr(loc: Loc, message: String): InterpreterRuntime[Nothing] =
+  def failWithInternalErr(loc: Loc, message: String): InterpreterRuntime[Nothing] =
     InterpreterRuntime(_ => Left(RuntimeErr.InternalInterpreterErr(loc, message)))
 
   private def currentCtx: InterpreterRuntime[RuntimeCtx] =

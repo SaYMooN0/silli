@@ -60,9 +60,12 @@ private def interpretCompoundStmt(compoundStmt: CompoundStmtBoundAstNode): Inter
 private def interpretAssignStmt(assignStmt: AssignStmtBoundAstNode): InterpreterRuntime[Unit] = {
   for {
     value <- interpretExpr(assignStmt.typedExpr.expr)
-    _ <- InterpreterRuntime.callstack.flatMap(
-      callstack => InterpreterRuntime.pure(callstack.setVariable(assignStmt.varSym.varName, value))
-    )
+    _ <- InterpreterRuntime.callstack.flatMap { callstack =>
+      fromCallstackResult(
+        callstack.setVariable(assignStmt.varSym.varName, value),
+        assignStmt.varSym.declOrigin.declLoc
+      )
+    }
   } yield ()
 }
 
@@ -72,7 +75,7 @@ private def interpretIfStmt(ifStmt: IfStmtBoundAstNode): InterpreterRuntime[Unit
 
     conditionBool <- conditionExprVal match {
       case Value.BooleanValue(booleanVal) => InterpreterRuntime.pure(booleanVal)
-      case nonBooleanVal => InterpreterRuntime.failWIthInternalErr(ifStmt.conditionLoc, s"If statement condition expression must be boolean, but got: $nonBooleanVal")
+      case nonBooleanVal => InterpreterRuntime.failWithInternalErr(ifStmt.conditionLoc, s"If statement condition expression must be boolean, but got: $nonBooleanVal")
     }
     _ <- conditionBool match {
       case true => interpretStmt(ifStmt.thenStmt)
@@ -124,6 +127,7 @@ private def interpretUnOpExpr(expr: UnOpBoundAstNode): InterpreterRuntime[Value]
     case None => throw new Error(s"Unsupported unary operations must not pass the semantic analyzer: $expr")
   }
 } yield result
+
 private def interpretBinOpExpr(expr: BinOpBoundAstNode): InterpreterRuntime[Value] = for {
   left <- interpretExpr(expr.left)
   right <- interpretExpr(expr.right)

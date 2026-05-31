@@ -1,21 +1,35 @@
+ThisBuild / scalaVersion := "3.7.1"
+ThisBuild / organization := "com.example"
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.3.7"
-
-lazy val copyPascalProgram = taskKey[File]("Copy pascalProgram.txt to target directory")
+lazy val commonSettings = Seq(
+  scalacOptions ++= Seq(
+    "-deprecation",
+    "-feature",
+    "-unchecked"
+  )
+)
 
 lazy val root = (project in file("."))
+  .aggregate(siliCore, siliCli)
   .settings(
     name := "sili",
+    publish / skip := true,
+    Compile / unmanagedSourceDirectories := Nil,
+    Test / unmanagedSourceDirectories := Nil
+  )
 
-    copyPascalProgram := {
-      val src = baseDirectory.value / "pascalProgram.txt"
-      val dest = (Compile / target).value / "pascalProgram.txt"
+lazy val siliCore = (project in file("sili-core"))
+  .settings(commonSettings)
+  .settings(
+    name := "sili-core",
+    libraryDependencies += "org.scalameta" %% "munit" % "1.3.1" % Test
+  )
 
-      IO.copyFile(src, dest)
-
-      dest
-    },
-
-    Compile / compile := (Compile / compile).dependsOn(copyPascalProgram).value
+lazy val siliCli = (project in file("sili-cli"))
+  .dependsOn(siliCore)
+  .settings(commonSettings)
+  .settings(
+    name := "sili-cli",
+    Compile / mainClass := Some("sili.cli.Main")
   )
