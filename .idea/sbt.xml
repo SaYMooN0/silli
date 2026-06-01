@@ -7,14 +7,13 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/project" />
-            <option value="$PROJECT_DIR$/sili-cli" />
-            <option value="$PROJECT_DIR$/sili-core" />
+            <option value="E:\silli" />
+            <option value="E:\silli\project" />
+            <option value="E:\silli\sili-cli" />
+            <option value="E:\silli\sili-core" />
           </set>
         </option>
         <option name="sbtVersion" value="1.10.7" />
-        <option name="separateProdAndTestSources" value="false" />
       </SbtProjectSettings>
     </option>
   </component>

@@ -9,7 +9,6 @@ object InterpretationSuccess;
 
 
 def interpretBoundAst(boundAst: BoundAstRoot, ioCtx: IOCtx): Either[RuntimeErr, InterpretationSuccess.type] = {
-
   val initialRuntime = RuntimeCtx.init(boundAst.programName._1, ioCtx)
   interpretAstRoot(boundAst).run(initialRuntime) match {
     case Right((_, _)) => Right(InterpretationSuccess)
@@ -63,7 +62,7 @@ private def interpretAssignStmt(assignStmt: AssignStmtBoundAstNode): Interpreter
     _ <- InterpreterRuntime.callstack.flatMap { callstack =>
       fromCallstackResult(
         callstack.setVariable(assignStmt.varSym.varName, value),
-        assignStmt.varSym.declOrigin.declLoc
+        assignStmt.loc
       )
     }
   } yield ()
@@ -85,8 +84,6 @@ private def interpretIfStmt(ifStmt: IfStmtBoundAstNode): InterpreterRuntime[Unit
 }
 
 private def interpretProcCallStmt(procCallStmt: ProcCallStmtBoundAstNode): InterpreterRuntime[Unit] = {
-  val procSym = procCallStmt.procSym
-
   for {
     actualParamValues <- procCallStmt.actualParams.foldLeft(InterpreterRuntime.pure(List.empty[Value])) {
       (acc, typedExpr) =>
@@ -95,12 +92,23 @@ private def interpretProcCallStmt(procCallStmt: ProcCallStmtBoundAstNode): Inter
           value <- interpretExpr(typedExpr.expr)
         } yield values :+ value
     }
+    _ <- procCallStmt.procSym.decl match {
+      case BuiltinDeclOrigin => InterpreterRuntime.callStdLibProcedure(procCallStmt.procSym, actualParamValues, procCallStmt.loc)
+      case _: UserDeclOrigin => interpretUserProcCall(procCallStmt.procSym, actualParamValues, procCallStmt.loc)
+    }
+  } yield ()
+}
 
+
+private def interpretUserProcCall(procSym: ProcedureSymbol, actualParamValues: List[Value], callLoc: Loc): InterpreterRuntime[Unit] = {
+  for {
     procDecl <- InterpreterRuntime.callstack.flatMap { callstack =>
-      fromCallstackResult(callstack.enterProcCall(procSym, actualParamValues), procCallStmt.loc)
+      fromCallstackResult(callstack.enterProcCall(procSym, actualParamValues), callLoc)
     }
     _ <- interpretBlock(procDecl.block)
-    _ <- InterpreterRuntime.callstack.flatMap { callstack => InterpreterRuntime.pure(callstack.leaveProcCall()) }
+    _ <- InterpreterRuntime.callstack.flatMap { callstack =>
+      InterpreterRuntime.pure(callstack.leaveProcCall())
+    }
   } yield ()
 }
 //expressions
@@ -123,8 +131,8 @@ private def interpretVarRefExpr(expr: VarRefBoundAstNode): InterpreterRuntime[Va
 private def interpretUnOpExpr(expr: UnOpBoundAstNode): InterpreterRuntime[Value] = for {
   innerExpr <- interpretExpr(expr.inner)
   result <- TypeSystem.UnOpRules.applyOp(expr.op, innerExpr) match {
-    case Some(res) => InterpreterRuntime.pure(res)
-    case None => throw new Error(s"Unsupported unary operations must not pass the semantic analyzer: $expr")
+    case Right(res) => InterpreterRuntime.pure(res)
+    case Left(err) => failFromOpEvalErr(expr.loc, err)
   }
 } yield result
 
@@ -132,8 +140,8 @@ private def interpretBinOpExpr(expr: BinOpBoundAstNode): InterpreterRuntime[Valu
   left <- interpretExpr(expr.left)
   right <- interpretExpr(expr.right)
   result <- TypeSystem.BinOpRules.applyOp(left, expr.op, right) match {
-    case Some(res) => InterpreterRuntime.pure(res)
-    case None => throw new Error(s"Unsupported binary operations must not pass the semantic analyzer: $expr")
+    case Right(res) => InterpreterRuntime.pure(res)
+    case Left(err) => failFromOpEvalErr(expr.loc, err)
   }
 } yield result
 
@@ -150,3 +158,14 @@ private def fromCallstackResult[A](result: Either[CallstackErr, A], loc: Loc): I
     }
   }
 }
+private def failFromOpEvalErr(loc: Loc, err: TypeSystem.OpEvalErr): InterpreterRuntime[Nothing] =
+  err match {
+    case TypeSystem.OpEvalErr.DivisionByZero => InterpreterRuntime.fail(RuntimeErr.DivisionByZero(loc))
+    case TypeSystem.OpEvalErr.IntegerOverflow => InterpreterRuntime.fail(RuntimeErr.IntegerOverflow(loc))
+    case TypeSystem.OpEvalErr.RealOverflow => InterpreterRuntime.fail(RuntimeErr.RealOverflow(loc))
+    case TypeSystem.OpEvalErr.InvalidRealResult => InterpreterRuntime.fail(RuntimeErr.InvalidRealResult(loc))
+    case TypeSystem.OpEvalErr.UnsupportedOperation => InterpreterRuntime.failWithInternalErr(
+      loc,
+      "Unsupported operation must not pass the semantic analyzer"
+    )
+  }

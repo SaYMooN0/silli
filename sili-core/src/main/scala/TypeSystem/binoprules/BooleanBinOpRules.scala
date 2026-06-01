@@ -17,7 +17,7 @@ private[TypeSystem] object BooleanBinOpRules {
 
   private def boolBoolToBool(f: (Boolean, Boolean) => Boolean): BinOpRules.Rule =
     BinOpRules.Rule(BuiltInType.BooleanT, {
-      case (Value.BooleanValue(a), Value.BooleanValue(b)) => Some(Value.BooleanValue(f(a, b)))
-      case _ => None
+      case (Value.BooleanValue(a), Value.BooleanValue(b)) => Right(Value.BooleanValue(f(a, b)))
+      case _ => Left(OpEvalErr.UnsupportedOperation)
     })
 }

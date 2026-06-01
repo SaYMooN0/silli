@@ -171,7 +171,7 @@ private def analyzeAssignStmt(assignStmt: AstAssignStmt): SemanticAnalyzer[Optio
     result <- (varSymOpt, exprOpt) match {
       case (Some(varSym), Some(exprWithType)) =>
         if (TypeSystem.AssignRules.canBeAssigned(varSym.typeSym.spec, exprWithType.typeSym.spec)) {
-          SemanticAnalyzer.pure(Some(AssignStmtBoundAstNode(varSym, exprWithType)))
+          SemanticAnalyzer.pure(Some(AssignStmtBoundAstNode(varSym, exprWithType, assignStmt.loc)))
         } else {
           SemanticAnalyzer.reportErrAndMapNone(SemanticErr.CannotAssign(varSym.typeSym, exprWithType.typeSym, assignStmt.loc))
         }
@@ -292,7 +292,7 @@ private def analyzeUnOp(node: AstUnOp): SemanticAnalyzer[Option[AnyTypedExpr]] =
             node.op._1, exprType, node.op._2
           ))
           case Some(resultType) => SemanticAnalyzer.pure(Some(TypedExpr(
-            UnOpBoundAstNode(innerExpr, node.op._1), TypeSymbol.fromType(resultType)
+            UnOpBoundAstNode(innerExpr, node.op._1, node.loc), TypeSymbol.fromType(resultType)
           )))
         }
       case _ => SemanticAnalyzer.pure(None)
@@ -310,7 +310,7 @@ private def analyzeBinOp(node: AstBinOp): SemanticAnalyzer[Option[AnyTypedExpr]]
             node.op._1, lType, rType, node.op._2
           ))
           case Some(resultType) => SemanticAnalyzer.pure(Some(TypedExpr(
-            BinOpBoundAstNode(lExpr, node.op._1, rExpr),
+            BinOpBoundAstNode(lExpr, node.op._1, rExpr, node.loc),
             TypeSymbol.fromType(resultType)
           )))
         }

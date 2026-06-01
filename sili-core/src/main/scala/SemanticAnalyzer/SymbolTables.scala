@@ -27,12 +27,15 @@ final class BuiltinsScopeSymbolTable private(val dict: Map[Ident, SemanticSymbol
 }
 
 private object BuiltinsScopeSymbolTable {
-  def init: BuiltinsScopeSymbolTable = new BuiltinsScopeSymbolTable(Map(
-    Ident(TypeSymbol.IntegerSym.spec.name) -> TypeSymbol.IntegerSym,
-    Ident(TypeSymbol.RealSym.spec.name) -> TypeSymbol.RealSym,
-    Ident(TypeSymbol.BooleanSym.spec.name) -> TypeSymbol.BooleanSym,
-    Ident(TypeSymbol.StringSym.spec.name) -> TypeSymbol.StringSym
-  ))
+  def init: BuiltinsScopeSymbolTable = new BuiltinsScopeSymbolTable(
+    Map(
+      Ident(TypeSymbol.IntegerSym.spec.name) -> TypeSymbol.IntegerSym,
+      Ident(TypeSymbol.RealSym.spec.name) -> TypeSymbol.RealSym,
+      Ident(TypeSymbol.BooleanSym.spec.name) -> TypeSymbol.BooleanSym,
+      Ident(TypeSymbol.StringSym.spec.name) -> TypeSymbol.StringSym
+    )
+      ++ StdLib.StdLib.procedureSymbolsByName
+  )
 }
 
 final class GlobalScopeSymbolTable private(

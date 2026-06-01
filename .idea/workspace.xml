@@ -4,53 +4,26 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="29f6f16f-f3c1-4bcc-8021-b7d090301358" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/sili-cli/src/main/scala/Main.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/project.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="29f6f16f-f3c1-4bcc-8021-b7d090301358" name="Changes" comment="Continued to work o the AstParser">
+      <change afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/OpEvalErr.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/sbt.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sbt.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/scala_compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/scala_compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/scala_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/scala_settings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/build.sbt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/build.properties" beforeDir="false" afterPath="$PROJECT_DIR$/project/build.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Interpreter/Callstack.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/Callstack.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Interpreter/IOCtx.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/IOCtx.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Interpreter/Interpreter.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/Interpreter.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Interpreter/InterpreterRuntime.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/InterpreterRuntime.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Interpreter/RuntimeErr.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/RuntimeErr.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Interpreter/ValueOrUndefined.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/ValueOrUndefined.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Lexer/IdentAndKeywordReader.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/IdentAndKeywordReader.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Lexer/IdentRules.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/IdentRules.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Lexer/Lexer.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/Lexer.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Lexer/NumLiteralReader.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/NumLiteralReader.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Lexer/ReaderChar.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/ReaderChar.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Lexer/ReadingCtx.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/ReadingCtx.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Lexer/StringLiteralReader.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/StringLiteralReader.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Lexer/Token.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/Token.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Parser/Ast.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/Ast.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Parser/Parser.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/Parser.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Parser/ParserErr.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/ParserErr.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Parser/ParserVisitor.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/ParserVisitor.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/Parser/ParsingCtx.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/ParsingCtx.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/SemanticAnalyzer/BoundAst.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/BoundAst.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/SemanticAnalyzer/SemanticAnalyzer.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/SemanticAnalyzer.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/SemanticAnalyzer/SemanticAnalyzerVisitor.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/SemanticAnalyzerVisitor.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/SemanticAnalyzer/SemanticErr.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/SemanticErr.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/SemanticAnalyzer/Symbol.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/Symbol.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/SemanticAnalyzer/SymbolTables.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/SymbolTables.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/TypeSystem/AssignRules.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/AssignRules.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/TypeSystem/BinOp.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/BinOp.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/TypeSystem/BuiltInType.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/BuiltInType.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/TypeSystem/UnOp.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/UnOp.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/TypeSystem/Value.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/Value.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/TypeSystem/binoprules/BooleanBinOpRules.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/BooleanBinOpRules.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/TypeSystem/binoprules/IntegerBinOpRules.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/IntegerBinOpRules.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/TypeSystem/binoprules/RealBinOpRules.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/RealBinOpRules.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/TypeSystem/binoprules/StringBinOpRules.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/StringBinOpRules.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/main.scala" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pascalProgram" beforeDir="false" afterPath="$PROJECT_DIR$/pascalProgram" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-cli/src/main/scala/Main.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-cli/src/main/scala/Main.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/Interpreter.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/Interpreter.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/InterpreterRuntime.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/InterpreterRuntime.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/RuntimeErr.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/RuntimeErr.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/BoundAst.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/BoundAst.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/SemanticAnalyzerVisitor.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/SemanticAnalyzerVisitor.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/BinOp.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/BinOp.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/BuiltInType.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/BuiltInType.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/UnOp.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/UnOp.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/BooleanBinOpRules.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/BooleanBinOpRules.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/IntegerBinOpRules.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/IntegerBinOpRules.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/RealBinOpRules.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/RealBinOpRules.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/StringBinOpRules.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/binoprules/StringBinOpRules.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,7 +48,23 @@
               <path>
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="sili" type="f1a62948:ProjectNode" />
+                <item name="sbt commands" type="5c424813:SbtViewContributor$SbtCommandsGroupNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="sili" type="f1a62948:ProjectNode" />
                 <item name="sbt tasks" type="d9357504:SbtViewContributor$SbtTasksGroupNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="sili" type="f1a62948:ProjectNode" />
+                <item name="sili-build" type="2d1252cf:ModuleNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="sili" type="f1a62948:ProjectNode" />
+                <item name="sili-build" type="2d1252cf:ModuleNode" />
+                <item name="Dependencies" type="6de06a37:ExternalSystemViewDefaultContributor$MyDependenciesNode" />
               </path>
             </expand>
             <select />
@@ -100,7 +89,10 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="jar://C:/Program Files/Eclipse Adoptium/jdk-21.0.5.11-hotspot/lib/src.zip!/java.base/java/net/URLClassLoader.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://C:/Program Files/Java/jdk-17.0.2/lib/src.zip!/java.base/java/io/Reader.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/AppData/Local/Coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16-sources.jar!/scala/Function1.scala" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/AppData/Local/Coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16-sources.jar!/scala/NotImplementedError.scala" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/AppData/Local/Coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.3.7/scala3-library_3-3.3.7-sources.jar!/scala/compiletime/package.scala" root0="SKIP_INSPECTION" />
   </component>
   <component name="KubernetesApiPersistence">{}</component>
   <component name="KubernetesApiProvider">{
@@ -114,44 +106,122 @@
   &quot;associatedIndex&quot;: 2
 }</component>
   <component name="ProjectId" id="3EVV9aGaWmiyV6d0APyaPwqhzHx" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Main.executor": "Debug",
+    "MUnit.ParserSuite.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Remote JVM Debug.debugger.executor": "Debug",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "sbt Task.debugCli.executor": "Debug",
+    "sbt Task.runCli.executor": "Debug",
+    "settings.editor.selected.configurable": "reference.settingsdialog.IDE.editor.colors.com.intellij.openapi.options.colors.pages.JavaColorSettingsPage",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="Parser" />
     </key>
   </component>
+  <component name="RunManager">
+    <configuration name="debugger" type="Remote">
+      <option name="USE_SOCKET_TRANSPORT" value="true" />
+      <option name="SERVER_MODE" value="false" />
+      <option name="SHMEM_ADDRESS" />
+      <option name="HOST" value="localhost" />
+      <option name="PORT" value="5005" />
+      <option name="AUTO_RESTART" value="false" />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="5005" />
+        <option name="LOCAL" value="false" />
+      </RunnerSettings>
+      <method v="2">
+        <option name="RunConfigurationTask" enabled="true" run_configuration_name="debugCli" run_configuration_type="SbtRunConfiguration" />
+      </method>
+    </configuration>
+    <configuration name="build core" type="SbtRunConfiguration" factoryName="sbt Task" show_console_on_std_err="false" show_console_on_std_out="false">
+      <option name="allowRunningInParallel" value="false" />
+      <option name="projectPathOnTarget" />
+      <option name="selectedOptions">
+        <list />
+      </option>
+      <option name="tasks" value="siliCore/compile" />
+      <option name="useSbtShell" value="true" />
+      <option name="vmparams" value="-Xms512M -Xmx1024M -Xss1M" />
+      <option name="workingDir" value="$PROJECT_DIR$" />
+      <option name="envFilePaths" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="debugCli" type="SbtRunConfiguration" factoryName="sbt Task" show_console_on_std_err="false" show_console_on_std_out="false">
+      <option name="allowRunningInParallel" value="false" />
+      <option name="projectPathOnTarget" />
+      <option name="selectedOptions">
+        <list />
+      </option>
+      <option name="tasks" value="runCli -jvm-debug 5005" />
+      <option name="useSbtShell" value="false" />
+      <option name="vmparams" value="-Xms512M -Xmx1024M -Xss1M" />
+      <option name="workingDir" value="$PROJECT_DIR$" />
+      <option name="envFilePaths" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="runCli" type="SbtRunConfiguration" factoryName="sbt Task" show_console_on_std_err="false" show_console_on_std_out="false">
+      <option name="allowRunningInParallel" value="false" />
+      <option name="projectPathOnTarget" />
+      <option name="selectedOptions">
+        <list />
+      </option>
+      <option name="tasks" value="runCli" />
+      <option name="useSbtShell" value="true" />
+      <option name="vmparams" value="-Xms512M -Xmx1024M -Xss1M" />
+      <option name="workingDir" value="$PROJECT_DIR$" />
+      <option name="envFilePaths" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Remote JVM Debug.debugger" />
+      <item itemvalue="sbt Task.runCli" />
+      <item itemvalue="sbt Task.build core" />
+      <item itemvalue="sbt Task.debugCli" />
+    </list>
+  </component>
   <component name="ScalaProjectSettings">
     <option name="migrateConfigurationsNotificationShown" value="true" />
-    <option name="scala3DisclaimerShown" value="true" />
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.29188.36" />
-        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-IU-251.29188.36" />
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.24374.151" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.24374.151" />
       </set>
     </attachedChunks>
   </component>
@@ -170,5 +240,20 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

@@ -1,6 +1,5 @@
 package TypeSystem
 
-import TypeSystem.BinOpRules.*
 
 enum BuiltInType(val name: String) {
   case IntegerT extends BuiltInType("integer")

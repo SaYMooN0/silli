@@ -15,13 +15,13 @@ private[TypeSystem] object StringBinOpRules {
 
   private def stringStringToString(f: (String, String) => String): BinOpRules.Rule =
     BinOpRules.Rule(BuiltInType.StringT, {
-      case (Value.StringValue(a), Value.StringValue(b)) => Some(Value.StringValue(f(a, b)))
-      case _ => None
+      case (Value.StringValue(a), Value.StringValue(b)) => Right(Value.StringValue(f(a, b)))
+      case _ => Left(OpEvalErr.UnsupportedOperation)
     })
 
   private def stringStringToBool(f: (String, String) => Boolean): BinOpRules.Rule =
     BinOpRules.Rule(BuiltInType.BooleanT, {
-      case (Value.StringValue(a), Value.StringValue(b)) => Some(Value.BooleanValue(f(a, b)))
-      case _ => None
+      case (Value.StringValue(a), Value.StringValue(b)) => Right(Value.BooleanValue(f(a, b)))
+      case _ => Left(OpEvalErr.UnsupportedOperation)
     })
 }

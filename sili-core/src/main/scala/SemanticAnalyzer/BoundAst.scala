@@ -24,7 +24,7 @@ sealed trait StmtBoundAstNode;
 
 final case class CompoundStmtBoundAstNode(stmts: List[StmtBoundAstNode]) extends StmtBoundAstNode
 
-final case class AssignStmtBoundAstNode(varSym: VariableSymbol, typedExpr: AnyTypedExpr) extends StmtBoundAstNode
+final case class AssignStmtBoundAstNode(varSym: VariableSymbol, typedExpr: AnyTypedExpr, loc: Loc) extends StmtBoundAstNode
 
 final case class ProcCallStmtBoundAstNode(procSym: ProcedureSymbol, actualParams: List[AnyTypedExpr], loc: Loc) extends StmtBoundAstNode
 
@@ -61,6 +61,6 @@ final case class StringLiteralBoundAstNode(value: String) extends ExprBoundAstNo
 
 final case class VarRefBoundAstNode(varSym: VariableSymbol, loc: Loc) extends ExprBoundAstNode
 
-final case class UnOpBoundAstNode(inner: ExprBoundAstNode, op: UnOp) extends ExprBoundAstNode
+final case class UnOpBoundAstNode(inner: ExprBoundAstNode, op: UnOp, loc: Loc) extends ExprBoundAstNode
 
-final case class BinOpBoundAstNode(left: ExprBoundAstNode, op: BinOp, right: ExprBoundAstNode) extends ExprBoundAstNode
+final case class BinOpBoundAstNode(left: ExprBoundAstNode, op: BinOp, right: ExprBoundAstNode, loc: Loc) extends ExprBoundAstNode
