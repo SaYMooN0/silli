@@ -13,9 +13,9 @@ final case class BlockBoundAstNode(
                                     compoundStmt: CompoundStmtBoundAstNode
                                   )
 
-final case class VarDeclBoundAstNode(varSym: VariableSymbol, symLoc: Loc);
+final case class VarDeclBoundAstNode(varSym: VarSymbol, symLoc: Loc);
 
-final case class ProcDeclBoundAstNode(procSym: ProcedureSymbol, symLoc: Loc, block: BlockBoundAstNode);
+final case class ProcDeclBoundAstNode(procSym: ProcSymbol, symLoc: Loc, block: BlockBoundAstNode);
 
 
 //statements
@@ -24,9 +24,9 @@ sealed trait StmtBoundAstNode;
 
 final case class CompoundStmtBoundAstNode(stmts: List[StmtBoundAstNode]) extends StmtBoundAstNode
 
-final case class AssignStmtBoundAstNode(varSym: VariableSymbol, typedExpr: AnyTypedExpr, loc: Loc) extends StmtBoundAstNode
+final case class AssignStmtBoundAstNode(varSym: VarSymbol, typedExpr: AnyTypedExpr, loc: Loc) extends StmtBoundAstNode
 
-final case class ProcCallStmtBoundAstNode(procSym: ProcedureSymbol, actualParams: List[AnyTypedExpr], loc: Loc) extends StmtBoundAstNode
+final case class ProcCallStmtBoundAstNode(procSym: ProcSymbol, actualParams: List[AnyTypedExpr], loc: Loc) extends StmtBoundAstNode
 
 final case class IfStmtBoundAstNode(
                                      condition: BooleanTypedExpr,
@@ -59,7 +59,7 @@ final case class RealLiteralBoundAstNode(value: Double) extends ExprBoundAstNode
 
 final case class StringLiteralBoundAstNode(value: String) extends ExprBoundAstNode
 
-final case class VarRefBoundAstNode(varSym: VariableSymbol, loc: Loc) extends ExprBoundAstNode
+final case class VarRefBoundAstNode(varSym: VarSymbol, loc: Loc) extends ExprBoundAstNode
 
 final case class UnOpBoundAstNode(inner: ExprBoundAstNode, op: UnOp, loc: Loc) extends ExprBoundAstNode
 

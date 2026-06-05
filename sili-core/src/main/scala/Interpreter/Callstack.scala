@@ -1,7 +1,7 @@
 package Interpreter
 
 import Parser.Ident
-import SemanticAnalyzer.{ProcDeclBoundAstNode, ProcedureId, ProcedureSymbol}
+import SemanticAnalyzer.{ProcDeclBoundAstNode, ProcedureId, ProcSymbol}
 import TypeSystem.{BuiltInType, Value}
 
 import scala.collection.mutable
@@ -75,7 +75,7 @@ final class Callstack private(private val stack: mutable.Stack[ActivationRecord]
       )
     }
 
-  def enterProcCall(procSym: ProcedureSymbol, actualParamValues: List[Value]): Either[CallstackErr, ProcDeclBoundAstNode] = {
+  def enterProcCall(procSym: ProcSymbol, actualParamValues: List[Value]): Either[CallstackErr, ProcDeclBoundAstNode] = {
     currentAr.flatMap { ar =>
       ar.tryFindProcedureClosure(procSym.id) match {
         case None => Left(CallstackErr.ProcedureClosureNotFound(procSym.id))

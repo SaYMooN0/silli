@@ -3,7 +3,7 @@ package StdLib
 import Interpreter.IOCtx
 import Lexer.{Loc, Pos}
 import Parser.Ident
-import SemanticAnalyzer.{BuiltinDeclOrigin, DeclOrigin, ProcedureId, ProcedureSymbol, SemanticSymbol, TypeSymbol, UserDeclOrigin, VariableSymbol}
+import SemanticAnalyzer.{BuiltinDeclOrigin, DeclOrigin, ProcedureId, ProcSymbol, SemanticSymbol, TypeSymbol, UserDeclOrigin, VarSymbol}
 import TypeSystem.Value
 
 object StdLib {
@@ -21,13 +21,13 @@ object StdLib {
       }
       .toMap
 
-  def procedureSymbolsByName: Map[Ident, ProcedureSymbol] =
+  def procedureSymbolsByName: Map[Ident, ProcSymbol] =
     proceduresById
       .values
       .map(stdProc => stdProc.symbol.procName -> stdProc.symbol)
       .toMap
 
-  def tryFindProcedureSymbol(name: Ident): Option[ProcedureSymbol] =
+  def tryFindProcedureSymbol(name: Ident): Option[ProcSymbol] =
     procedureSymbolsByName.get(name)
 
   def tryCallProcedure(
@@ -47,14 +47,14 @@ private def StdParamDeclOrigin: UserDeclOrigin = UserDeclOrigin(Loc(Pos(1, 1), P
 
 type ProcedureImplementation = (actualParamValues: List[Value], io: IOCtx, callLoc: Loc) => Either[StdLibCallErrMsg, Unit];
 
-final case class StdProcedure(symbol: ProcedureSymbol, implementation: ProcedureImplementation);
+final case class StdProcedure(symbol: ProcSymbol, implementation: ProcedureImplementation);
 
 def initStdProcedure(
                       procedureName: String,
                       paramsNameToType: List[(String, TypeSymbol)],
                       implementation: ProcedureImplementation
                     ): (id: ProcedureId) => StdProcedure = id => {
-  val params = paramsNameToType.map((name, tSym) => VariableSymbol(Ident(name), tSym, StdParamDeclOrigin)).toList;
-  val procSym = ProcedureSymbol(id, Ident(procedureName), params, 0, BuiltinDeclOrigin);
+  val params = paramsNameToType.map((name, tSym) => VarSymbol(Ident(name), tSym, StdParamDeclOrigin)).toList;
+  val procSym = ProcSymbol(id, Ident(procedureName), params, 0, BuiltinDeclOrigin);
   StdProcedure(procSym, implementation);
 }

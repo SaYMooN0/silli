@@ -2,7 +2,7 @@ package Interpreter
 
 import Lexer.Loc
 import Parser.Ident
-import SemanticAnalyzer.ProcedureSymbol
+import SemanticAnalyzer.ProcSymbol
 import TypeSystem.Value
 
 final class RuntimeCtx private(
@@ -42,7 +42,7 @@ object InterpreterRuntime {
 
   def callstack: InterpreterRuntime[Callstack] = currentCtx.map(_.callstack)
 
-  def callStdLibProcedure(procSym: ProcedureSymbol, actualParams: List[Value], callLoc: Loc): InterpreterRuntime[Unit] =
+  def callStdLibProcedure(procSym: ProcSymbol, actualParams: List[Value], callLoc: Loc): InterpreterRuntime[Unit] =
     currentCtx.flatMap { ctx =>
       StdLib.StdLib.tryCallProcedure(procSym.id, actualParams, ctx.io, callLoc) match {
         case Some(Right(())) => InterpreterRuntime.pure(())

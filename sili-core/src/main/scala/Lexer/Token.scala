@@ -14,7 +14,7 @@ type Token =
     | IdentToken
     | SimpleToken
     | OpToken
-    | SyntaxKeywordToken
+    | Keyword
 
 
 enum BooleanLiteralToken {
@@ -71,12 +71,16 @@ enum OpToken {
 enum SyntaxKeywordToken {
   case Begin;
   case End;
-  case Var;
   case Program;
-  case Procedure;
   case If;
   case Then;
   case Else;
+}
+
+enum DeclarationKeywordToken {
+  case Var;
+  case Procedure;
+  case Function;
 }
 
 type Keyword =
@@ -86,6 +90,7 @@ type Keyword =
     | OpToken.Or.type
     | OpToken.Xor.type
     | SyntaxKeywordToken
+    | DeclarationKeywordToken
     | BuiltInTypeNameToken
     | BooleanLiteralToken
 
@@ -94,24 +99,26 @@ def mapToKeyword(str: String): Option[Keyword] = str match {
   case "div" => Some(OpToken.Div)
   case "not" => Some(OpToken.Not)
   case "and" => Some(OpToken.And)
-  case "or" => Some(OpToken.Or)
+  case "or"  => Some(OpToken.Or)
   case "xor" => Some(OpToken.Xor)
+  //DeclarationKeywordToken
+  case "var"       => Some(DeclarationKeywordToken.Var)
+  case "procedure" => Some(DeclarationKeywordToken.Procedure)
+  case "function"  => Some(DeclarationKeywordToken.Procedure)
   //SyntaxKeywordToken
-  case "end" => Some(SyntaxKeywordToken.End)
-  case "begin" => Some(SyntaxKeywordToken.Begin)
-  case "var" => Some(SyntaxKeywordToken.Var)
+  case "end"     => Some(SyntaxKeywordToken.End)
+  case "begin"   => Some(SyntaxKeywordToken.Begin)
   case "program" => Some(SyntaxKeywordToken.Program)
-  case "procedure" => Some(SyntaxKeywordToken.Procedure)
-  case "if" => Some(SyntaxKeywordToken.If)
-  case "then" => Some(SyntaxKeywordToken.Then)
-  case "else" => Some(SyntaxKeywordToken.Else)
+  case "if"      => Some(SyntaxKeywordToken.If)
+  case "then"    => Some(SyntaxKeywordToken.Then)
+  case "else"    => Some(SyntaxKeywordToken.Else)
   //TypeNameToken
   case BuiltInType.IntegerT.name => Some(BuiltInTypeNameToken(BuiltInType.IntegerT))
-  case BuiltInType.RealT.name => Some(BuiltInTypeNameToken(BuiltInType.RealT))
+  case BuiltInType.RealT.name    => Some(BuiltInTypeNameToken(BuiltInType.RealT))
   case BuiltInType.BooleanT.name => Some(BuiltInTypeNameToken(BuiltInType.BooleanT))
-  case BuiltInType.StringT.name => Some(BuiltInTypeNameToken(BuiltInType.StringT))
+  case BuiltInType.StringT.name  => Some(BuiltInTypeNameToken(BuiltInType.StringT))
   //BoolLiteralToken
-  case "true" => Some(BooleanLiteralToken.True)
+  case "true"  => Some(BooleanLiteralToken.True)
   case "false" => Some(BooleanLiteralToken.False)
   //else
   case _ => None

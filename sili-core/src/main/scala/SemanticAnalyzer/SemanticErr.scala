@@ -10,7 +10,7 @@ enum SemanticErr(loc: Loc) {
 
   case UndeclaredProcSym(procName: Ident, loc: Loc) extends SemanticErr(loc)
   case ExpectedProcSym(receivedSym: SemanticSymbol, receivedSymLoc: Loc) extends SemanticErr(receivedSymLoc)
-  case ProcIncorrectActualParamsCount(sym: ProcedureSymbol, callLoc: Loc, actualParamsCount: Int) extends SemanticErr(callLoc)
+  case ProcIncorrectActualParamsCount(sym: ProcSymbol, callLoc: Loc, actualParamsCount: Int) extends SemanticErr(callLoc)
 
 
   case UndeclaredVarSym(varName: Ident, loc: Loc) extends SemanticErr(loc)

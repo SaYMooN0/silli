@@ -8,24 +8,34 @@ import scala.compiletime.erasedValue
 final case class AstRoot(programName: (Ident, Loc), block: AstBlock)
 
 final case class AstBlock(
-                           varDecls: List[AstVarDeclGroup],
-                           procDecls: List[AstProcDecl],
+                           decls: List[AstDeclarationItem],
                            compoundStmt: AstCompoundStmt,
                            loc: Loc
                          )
 
-final case class AstVarDeclGroup(
-                                  varRefs: List[AstVarRef],
-                                  typeAnnotation: (Ident, Loc),
-                                  loc: Loc
-                                )
+enum AstDeclarationItem {
+  case AstVarGroupDecl(varDecls: List[AstTypedVarsDecl])
+  case AstProcDecl(
+                    procName: (Ident, Loc),
+                    formalParams: List[AstFormalParam],
+                    block: AstBlock,
+                    loc: Loc
+                  )
 
-final case class AstProcDecl(
-                              procName: (Ident, Loc),
-                              formalParams: List[AstFormalParam],
-                              block: AstBlock,
-                              loc: Loc
-                            )
+  case AstFuncDecl(
+                    funcName: (Ident, Loc),
+                    formalParams: List[AstFormalParam],
+                    block: AstBlock,
+                    typeAnnotation: (Ident, Loc),
+                    loc: Loc
+                  )
+}
+
+final case class AstTypedVarsDecl(
+                                   varRefs: List[AstVarRef],
+                                   typeAnnotation: (Ident, Loc),
+                                   loc: Loc
+                                 );
 
 final case class AstFormalParam(
                                  varRef: (Ident, Loc),

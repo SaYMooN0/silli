@@ -3,7 +3,7 @@ package StdLib.procedures
 import Interpreter.IOCtx
 import Lexer.Loc
 import Parser.Ident
-import SemanticAnalyzer.{BuiltinDeclOrigin, ProcedureId, ProcedureSymbol, TypeSymbol, VariableSymbol}
+import SemanticAnalyzer.{BuiltinDeclOrigin, ProcedureId, ProcSymbol, TypeSymbol, VarSymbol}
 import StdLib.*
 import TypeSystem.Value
 

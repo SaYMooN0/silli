@@ -56,7 +56,7 @@ private def analyzeVarDeclInGroup(
       case (Some(alreadyDeclared), _) =>
         SemanticAnalyzer.reportErrAndMapNone(SemanticErr.SymAlreadyDeclared(varRef.loc, alreadyDeclared))
       case (None, Some(typeSym)) => {
-        val varSym = VariableSymbol(varRef.ident, typeSym, UserDeclOrigin(varRef.loc))
+        val varSym = VarSymbol(varRef.ident, typeSym, UserDeclOrigin(varRef.loc))
         SemanticAnalyzer
           .addSymbolToCurrentScope(varIdent, varSym)
           .map(_ => Some(VarDeclBoundAstNode(varSym, varRef.loc)))
@@ -96,7 +96,7 @@ private def analyzeProcDecl(procDecl: AstProcDecl): SemanticAnalyzer[Option[Proc
 
           formalParams = formalParamOpts.flatten
           procId <- SemanticAnalyzer.nextProcedureId
-          procSym = ProcedureSymbol(
+          procSym = ProcSymbol(
             id = procId,
             procName = procIdent,
             formalParams = formalParams,
@@ -116,8 +116,8 @@ private def analyzeProcDecl(procDecl: AstProcDecl): SemanticAnalyzer[Option[Proc
     }
   }
 }
-private def analyzeProcDeclFormalParams(params: List[AstFormalParam]): SemanticAnalyzer[List[Option[VariableSymbol]]] = {
-  params.foldLeft(SemanticAnalyzer.pure(List.empty[Option[VariableSymbol]])) {
+private def analyzeProcDeclFormalParams(params: List[AstFormalParam]): SemanticAnalyzer[List[Option[VarSymbol]]] = {
+  params.foldLeft(SemanticAnalyzer.pure(List.empty[Option[VarSymbol]])) {
     case (acc, param) =>
       for {
         gathered <- acc
@@ -125,14 +125,14 @@ private def analyzeProcDeclFormalParams(params: List[AstFormalParam]): SemanticA
       } yield gathered :+ analyzed
   }
 }
-private def analyzeProcDeclFormalParam(param: AstFormalParam): SemanticAnalyzer[Option[VariableSymbol]] = {
+private def analyzeProcDeclFormalParam(param: AstFormalParam): SemanticAnalyzer[Option[VarSymbol]] = {
   SemanticAnalyzer.currentScope.flatMap { scope =>
     val (paramIdent, paramIdentLoc) = param.varRef
     analyzeTypeSpec(param.typeAnnotation).flatMap { typeSymOpt =>
       (scope.lookupLocal(paramIdent), typeSymOpt) match {
         case (Some(alreadyDeclared), _) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.SymAlreadyDeclared(paramIdentLoc, alreadyDeclared))
         case (None, Some(typeSym)) =>
-          val paramSym = VariableSymbol(paramIdent, typeSym, UserDeclOrigin(paramIdentLoc))
+          val paramSym = VarSymbol(paramIdent, typeSym, UserDeclOrigin(paramIdentLoc))
           SemanticAnalyzer
             .addSymbolToCurrentScope(paramIdent, paramSym)
             .map(_ => Some(paramSym))
@@ -160,8 +160,8 @@ private def analyzeAssignStmt(assignStmt: AstAssignStmt): SemanticAnalyzer[Optio
     varSymOpt <- SemanticAnalyzer.currentScope.flatMap { scope =>
       val varIdent = assignStmt.varRef.ident
       scope.lookup(varIdent) match {
-        case Some(varSym: VariableSymbol) => SemanticAnalyzer.pure(Some(varSym))
-        case Some(sym) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ExpectedVarSym(sym, assignStmt.varRef.loc))
+        case Some(varSym: VarSymbol) => SemanticAnalyzer.pure(Some(varSym))
+        case Some(sym)               => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ExpectedVarSym(sym, assignStmt.varRef.loc))
         case None => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.UndeclaredVarSym(varIdent, assignStmt.varRef.loc))
       }
     }
@@ -209,8 +209,8 @@ private def analyzeProcCallStmt(procCallStmt: AstProcCallStmt): SemanticAnalyzer
     procSymOpt <- SemanticAnalyzer.currentScope.flatMap { scope =>
       val (procNameIdent, procNameLoc) = procCallStmt.procName
       scope.lookup(procNameIdent) match {
-        case Some(procSym: ProcedureSymbol) => SemanticAnalyzer.pure(Some(procSym))
-        case Some(sym) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ExpectedProcSym(sym, procNameLoc))
+        case Some(procSym: ProcSymbol) => SemanticAnalyzer.pure(Some(procSym))
+        case Some(sym)                 => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ExpectedProcSym(sym, procNameLoc))
         case None => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.UndeclaredProcSym(procNameIdent, procNameLoc))
       }
     }
@@ -224,7 +224,7 @@ private def analyzeProcCallStmt(procCallStmt: AstProcCallStmt): SemanticAnalyzer
 
 private def analyzeProcCallWithResolvedProc(
                                              procCallStmt: AstProcCallStmt,
-                                             procSym: ProcedureSymbol,
+                                             procSym: ProcSymbol,
                                              analyzedParamOpts: List[Option[AnyTypedExpr]]
                                            ): SemanticAnalyzer[Option[ProcCallStmtBoundAstNode]] = {
   val actualParamsCount = procCallStmt.actualParams.length
@@ -273,10 +273,10 @@ private def analyzeVarRef(varRef: AstVarRef): SemanticAnalyzer[Option[AnyTypedEx
   SemanticAnalyzer.currentScope.flatMap {
     scope =>
       scope.lookup(varIdent) match {
-        case Some(varSym: VariableSymbol) => SemanticAnalyzer.pure(Some(TypedExpr(
+        case Some(varSym: VarSymbol) => SemanticAnalyzer.pure(Some(TypedExpr(
           VarRefBoundAstNode(varSym, varRef.loc), varSym.typeSym
         )))
-        case Some(sym) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ExpectedVarSym(sym, varRef.loc))
+        case Some(sym)               => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ExpectedVarSym(sym, varRef.loc))
         case None => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.UndeclaredVarSym(varIdent, varRef.loc))
       }
 

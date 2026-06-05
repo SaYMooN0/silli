@@ -100,7 +100,7 @@ private def interpretProcCallStmt(procCallStmt: ProcCallStmtBoundAstNode): Inter
 }
 
 
-private def interpretUserProcCall(procSym: ProcedureSymbol, actualParamValues: List[Value], callLoc: Loc): InterpreterRuntime[Unit] = {
+private def interpretUserProcCall(procSym: ProcSymbol, actualParamValues: List[Value], callLoc: Loc): InterpreterRuntime[Unit] = {
   for {
     procDecl <- InterpreterRuntime.callstack.flatMap { callstack =>
       fromCallstackResult(callstack.enterProcCall(procSym, actualParamValues), callLoc)
