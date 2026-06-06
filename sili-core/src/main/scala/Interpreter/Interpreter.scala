@@ -61,7 +61,7 @@ private def interpretAssignStmt(assignStmt: AssignStmtBoundAstNode): Interpreter
     value <- interpretExpr(assignStmt.typedExpr.expr)
     _ <- InterpreterRuntime.callstack.flatMap { callstack =>
       fromCallstackResult(
-        callstack.setVariable(assignStmt.varSym.varName, value),
+        callstack.setVariable(assignStmt.valueSymbol.varName, value),
         assignStmt.loc
       )
     }

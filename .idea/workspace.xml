@@ -5,13 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="29f6f16f-f3c1-4bcc-8021-b7d090301358" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sbt.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sbt.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/scala_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/scala_settings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/Token.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/Token.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/Ast.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/Ast.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/ParserVisitor.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/ParserVisitor.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/BoundAst.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/BoundAst.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/SemanticAnalyzerVisitor.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/SemanticAnalyzerVisitor.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/Symbol.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/Symbol.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -227,7 +223,7 @@
       <workItem from="1780265239845" duration="655000" />
       <workItem from="1780293237532" duration="1906000" />
       <workItem from="1780682780102" duration="2660000" />
-      <workItem from="1780692917723" duration="872000" />
+      <workItem from="1780692917723" duration="10329000" />
     </task>
     <servers />
   </component>

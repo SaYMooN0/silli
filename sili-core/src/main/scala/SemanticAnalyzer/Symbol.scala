@@ -5,7 +5,7 @@ import Parser.Ident
 import TypeSystem.BuiltInType
 
 
-type SemanticSymbol = TypeSymbol | VarSymbol | ProcSymbol;
+type SemanticSymbol = TypeSymbol | ValueSymbol | ProcSymbol | FuncSymbol;
 
 enum TypeSymbol(val spec: BuiltInType) { //only built in types are supported for now
   case IntegerSym extends TypeSymbol(BuiltInType.IntegerT)
@@ -24,19 +24,19 @@ object TypeSymbol {
 }
 
 sealed trait ValueSymbol {
-  def valueName: Ident
+  def name: Ident
 
   def typeSym: TypeSymbol
 
   def declOrigin: DeclOrigin
 }
 
-final case class VarSymbol(valueName: Ident, typeSym: TypeSymbol, declOrigin: UserDeclOrigin) extends ValueSymbol
+final case class VarSymbol(name: Ident, typeSym: TypeSymbol, declOrigin: UserDeclOrigin) extends ValueSymbol
 
-final case class ParamSymbol(valueName: Ident, typeSym: TypeSymbol, declOrigin: DeclOrigin) extends ValueSymbol
+final case class ParamSymbol(name: Ident, typeSym: TypeSymbol, declOrigin: DeclOrigin) extends ValueSymbol
 
 final case class FuncResultSymbol(typeSym: TypeSymbol, declOrigin: UserDeclOrigin) extends ValueSymbol {
-  override val valueName: Ident = Ident("result")
+  override val name: Ident = Ident("result")
 }
 
 final case class ProcSymbol(

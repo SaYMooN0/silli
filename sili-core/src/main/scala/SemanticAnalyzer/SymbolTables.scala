@@ -101,10 +101,3 @@ extension (scope: GlobalScopeSymbolTable | ScopedSymbolTable)
       case scoped: ScopedSymbolTable => scoped.createChildScope(name)
     }
   }
-
-  def withSymbolInCurrentScope(symbolName: Ident, symbol: SemanticSymbol): GlobalScopeSymbolTable | ScopedSymbolTable = {
-    scope match {
-      case global: GlobalScopeSymbolTable => global.withSymbol(symbolName, symbol)
-      case scoped: ScopedSymbolTable => scoped.withSymbol(symbolName, symbol)
-    }
-  }

@@ -24,4 +24,8 @@ enum SemanticErr(loc: Loc) {
   case InvalidUnOp(unOp: TypeSystem.UnOp, innerNodeType: TypeSymbol, unOpLoc: Loc) extends SemanticErr(unOpLoc)
 
   case IncorrectType(receivedType: TypeSymbol, expected: TypeSymbol, receivedTypeLoc: Loc) extends SemanticErr(receivedTypeLoc)
+
+  case FuncResultNotAssigned(funcSym: FuncSymbol, loc: Loc) extends SemanticErr(loc)
+  case CannotPassAsParam(target: TypeSymbol, received: TypeSymbol, actualParamLoc: Loc) extends SemanticErr(actualParamLoc)
+  case ResultSymbolUsedAsParam(paramLoc: Loc) extends SemanticErr(paramLoc)
 }

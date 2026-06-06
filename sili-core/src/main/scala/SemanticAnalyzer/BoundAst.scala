@@ -7,15 +7,13 @@ import TypeSystem.{BinOp, UnOp}
 final case class BoundAstRoot(programName: (Ident, Loc), block: BlockBoundAstNode)
 
 
-final case class BlockBoundAstNode(
-                                    varDecls: List[VarDeclBoundAstNode],
-                                    procDecls: List[ProcDeclBoundAstNode],
-                                    compoundStmt: CompoundStmtBoundAstNode
-                                  )
+final case class BlockBoundAstNode(decls: List[DeclItemBoundAstNode], compoundStmt: CompoundStmtBoundAstNode)
 
-final case class VarDeclBoundAstNode(varSym: VarSymbol, symLoc: Loc);
-
-final case class ProcDeclBoundAstNode(procSym: ProcSymbol, symLoc: Loc, block: BlockBoundAstNode);
+enum DeclItemBoundAstNode {
+  case VarDecl(varSym: VarSymbol, symLoc: Loc)
+  case ProcDecl(procSym: ProcSymbol, symLoc: Loc, block: BlockBoundAstNode)
+  case FuncDecl(funcSym: FuncSymbol, symLoc: Loc, block: BlockBoundAstNode)
+}
 
 
 //statements
@@ -24,7 +22,7 @@ sealed trait StmtBoundAstNode;
 
 final case class CompoundStmtBoundAstNode(stmts: List[StmtBoundAstNode]) extends StmtBoundAstNode
 
-final case class AssignStmtBoundAstNode(varSym: VarSymbol, typedExpr: AnyTypedExpr, loc: Loc) extends StmtBoundAstNode
+final case class AssignStmtBoundAstNode(valueSymbol: ValueSymbol, typedExpr: AnyTypedExpr, loc: Loc) extends StmtBoundAstNode
 
 final case class ProcCallStmtBoundAstNode(procSym: ProcSymbol, actualParams: List[AnyTypedExpr], loc: Loc) extends StmtBoundAstNode
 
@@ -59,8 +57,10 @@ final case class RealLiteralBoundAstNode(value: Double) extends ExprBoundAstNode
 
 final case class StringLiteralBoundAstNode(value: String) extends ExprBoundAstNode
 
-final case class VarRefBoundAstNode(varSym: VarSymbol, loc: Loc) extends ExprBoundAstNode
+final case class VarRefBoundAstNode(valueSymbol: ValueSymbol, loc: Loc) extends ExprBoundAstNode
 
 final case class UnOpBoundAstNode(inner: ExprBoundAstNode, op: UnOp, loc: Loc) extends ExprBoundAstNode
 
 final case class BinOpBoundAstNode(left: ExprBoundAstNode, op: BinOp, right: ExprBoundAstNode, loc: Loc) extends ExprBoundAstNode
+
+final case class FuncCallBoundAstNode(funcSymbol: FuncSymbol, actualParams: List[AnyTypedExpr], loc: Loc) extends StmtBoundAstNode

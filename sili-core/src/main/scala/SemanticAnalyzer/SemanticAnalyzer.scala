@@ -43,6 +43,14 @@ object SemanticAnalyzer {
     }
   }
 
+  def nextFunctionId: SemanticAnalyzer[FunctionId] = {
+    SemanticAnalyzer { ctx =>
+      val currentId = ctx.nextFunctionId
+      val nextId = FunctionId(currentId.value + 1)
+      (currentId, ctx.copy(nextFunctionId = nextId))
+    }
+  }
+
   def reportErr(err: SemanticErr): SemanticAnalyzer[Unit] =
     updateCtx { ctx => ctx.copy(errors = ctx.errors :+ err) }
 
@@ -54,7 +62,7 @@ object SemanticAnalyzer {
       val updatedScope: GlobalScopeSymbolTable | ScopedSymbolTable =
         ctx.currentScope match {
           case global: GlobalScopeSymbolTable => global.withSymbol(name, symbol)
-          case scoped: ScopedSymbolTable => scoped.withSymbol(name, symbol)
+          case scoped: ScopedSymbolTable      => scoped.withSymbol(name, symbol)
         }
       ctx.copy(currentScope = updatedScope)
     }
@@ -63,13 +71,15 @@ object SemanticAnalyzer {
 final case class SemanticCtx(
                               errors: Vector[SemanticErr],
                               currentScope: GlobalScopeSymbolTable | ScopedSymbolTable,
-                              nextProcedureId: ProcedureId
+                              nextProcedureId: ProcedureId,
+                              nextFunctionId: FunctionId,
                             )
 
 object SemanticCtx {
   def init: SemanticCtx = SemanticCtx(
     errors = Vector.empty,
     currentScope = GlobalScopeSymbolTable.init,
-    ProcedureId(1)
+    ProcedureId(1),
+    FunctionId(1)
   )
 }
