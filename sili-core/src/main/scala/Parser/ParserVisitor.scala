@@ -67,7 +67,7 @@ private def parseTypedVarsDecl(): Parser[AstTypedVarsDecl] = for {
   _ <- Parser.eatToken(SimpleToken.Colon)
   typeAnnotation <- parseTypeSpecWithLoc()
   semi <- Parser.eatToken(SimpleToken.SemiColon)
-  varRefs = idents.map { case (ident, loc) => AstVarRef(ident, loc) }
+  varRefs: List[AstExpr.VarRef] = idents.map { case (ident, loc) => AstExpr.VarRef(ident, loc) }
   declLoc = Loc(varRefs.head.loc.start, semi.loc.end)
 } yield AstTypedVarsDecl(varRefs, typeAnnotation, declLoc)
 
@@ -145,14 +145,14 @@ private def parseStmt(): Parser[AstStmt] =
     }
   }
 
-private def parseCompoundStmt(): Parser[AstCompoundStmt] =
+private def parseCompoundStmt(): Parser[AstStmt.CompoundStmt] = {
   for {
     beginKw <- Parser.eatToken(SyntaxKeywordToken.Begin)
     allStmts <- parseStmtsListTailTillEndKw(List(), isDividerExpected = false)
     endKw <- Parser.eatToken(SyntaxKeywordToken.End)
-  } yield AstCompoundStmt(allStmts, Loc(beginKw.loc.start, endKw.loc.end))
-
-private def parseIfStmt(): Parser[AstIfStmt] = {
+  } yield AstStmt.CompoundStmt(allStmts, Loc(beginKw.loc.start, endKw.loc.end))
+}
+private def parseIfStmt(): Parser[AstStmt.IfStmt] = {
   for {
     ifKw <- Parser.eatToken(SyntaxKeywordToken.If)
     conditionExpr <- parseExpr()
@@ -175,7 +175,7 @@ private def parseIfStmt(): Parser[AstIfStmt] = {
         .orElse(thenStmt.map(_.loc.end))
         .getOrElse(thenKw.loc.end)
 
-  } yield AstIfStmt(conditionExpr, thenStmt, elseStmt, Loc(ifKw.loc.start, fullStmtEndPos))
+  } yield AstStmt.IfStmt(conditionExpr, thenStmt, elseStmt, Loc(ifKw.loc.start, fullStmtEndPos))
 }
 private def parseOptionalThenStmt(): Parser[Option[AstStmt]] = {
   Parser.curAndNxt.flatMap { (cur, nxt) =>
@@ -188,39 +188,24 @@ private def parseOptionalThenStmt(): Parser[Option[AstStmt]] = {
   }
 }
 
-private def parseProcCallStmt(ident: IdentToken): Parser[AstProcCallStmt] = for {
+private def parseProcCallStmt(ident: IdentToken): Parser[AstStmt.ProcCallStmt] = for {
   identWithLoc <- Parser.eatToken(ident)
   _ <- Parser.eatToken(SimpleToken.LPar)
-  params <- parseProcCallParamsList()
+  params <- parseCallParamsList()
   rPar <- Parser.eatToken(SimpleToken.RPar)
 
-} yield AstProcCallStmt((Ident(ident.ident), identWithLoc.loc), params, Loc(identWithLoc.loc.start, rPar.loc.end))
+} yield AstStmt.ProcCallStmt((Ident(ident.ident), identWithLoc.loc), params, Loc(identWithLoc.loc.start, rPar.loc.end))
 
-private def parseProcCallParamsList(): Parser[List[AstExpr]] = Parser.cur.flatMap { cur =>
-  cur.token match {
-    case SimpleToken.RPar => Parser.succeed(List())
-    case _                => for {
-      exprListHead <- parseExpr()
-      allExpr <- parseProcCallParamsTail(List(exprListHead))
-    } yield allExpr
-  }
-}
-private def parseProcCallParamsTail(gathered: List[AstExpr]): Parser[List[AstExpr]] = Parser.cur.flatMap { cur =>
-  cur.token match {
-    case SimpleToken.Comma => for {
-      _ <- Parser.eatToken(cur.token)
-      newExpr <- parseExpr()
-      allExpr <- parseProcCallParamsTail(gathered :+ newExpr)
-    } yield allExpr
-    case _                 => Parser.succeed(gathered)
-  }
-}
 
-private def parseAssignStmt(ident: IdentToken): Parser[AstAssignStmt] = for {
+private def parseAssignStmt(ident: IdentToken): Parser[AstStmt.AssignStmt] = for {
   identWithLoc <- Parser.eatToken(ident)
   _ <- Parser.eatToken(SimpleToken.Assign)
   expr <- parseExpr()
-} yield AstAssignStmt(AstVarRef(Ident(ident.ident), identWithLoc.loc), expr, Loc(identWithLoc.loc.start, expr.loc.end))
+} yield AstStmt.AssignStmt(
+  AstExpr.VarRef(Ident(ident.ident), identWithLoc.loc),
+  expr,
+  Loc(identWithLoc.loc.start, expr.loc.end)
+)
 //expressions
 private def parseExpr(): Parser[AstExpr] = parseOrExpr()
 
@@ -257,7 +242,7 @@ private def parseRelExpr(): Parser[AstExpr] = {
         case Some(binOp) => for {
           _ <- Parser.eatToken(opToken.token)
           right <- parseAddExpr()
-        } yield AstBinOp(left, right, (binOp, opToken.loc), Loc(left.loc.start, right.loc.end))
+        } yield AstExpr.BinOp(left, right, (binOp, opToken.loc), Loc(left.loc.start, right.loc.end))
 
       }
     }
@@ -293,29 +278,37 @@ private def parseUnaryExpr(): Parser[AstExpr] = {
       case Some(unOp) => for {
         _ <- Parser.eatToken(opToken.token)
         inner <- parseUnaryExpr()
-      } yield AstUnOp(inner, (unOp, opToken.loc), Loc(opToken.loc.start, inner.loc.end))
+      } yield AstExpr.UnOp(inner, (unOp, opToken.loc), Loc(opToken.loc.start, inner.loc.end))
     }
   }
 }
 private def parsePrimaryExpr(): Parser[AstExpr] = {
-  Parser.cur.flatMap { cur =>
-    cur.token match {
-      case l: RealNumLiteralToken    => Parser.skipAndSucceed(l, AstRealLiteral(l.value, cur.loc))
-      case l: IntegerNumLiteralToken => Parser.skipAndSucceed(l, AstIntegerLiteral(l.value, cur.loc))
-      case l: StringLiteralToken     => Parser.skipAndSucceed(l, AstStringLiteral(l.value, cur.loc))
-      case BooleanLiteralToken.True  => Parser.skipAndSucceed(BooleanLiteralToken.True, AstBooleanLiteral(true, cur.loc))
-      case BooleanLiteralToken.False => Parser.skipAndSucceed(BooleanLiteralToken.False, AstBooleanLiteral(false, cur.loc))
-      case ident: IdentToken         => Parser.skipAndSucceed(ident, AstVarRef(Ident(ident.ident), cur.loc))
-      case SimpleToken.LPar          => for {
+  Parser.curAndNxt.flatMap { case (cur, nxt) =>
+    (cur.token, nxt.token) match {
+      case (l: RealNumLiteralToken, _)           => Parser.skipAndSucceed(l, AstExpr.RealLiteral(l.value, cur.loc))
+      case (l: IntegerNumLiteralToken, _)        => Parser.skipAndSucceed(l, AstExpr.IntegerLiteral(l.value, cur.loc))
+      case (l: StringLiteralToken, _)            => Parser.skipAndSucceed(l, AstExpr.StringLiteral(l.value, cur.loc))
+      case (BooleanLiteralToken.True, _)         => Parser.skipAndSucceed(BooleanLiteralToken.True, AstExpr.BooleanLiteral(true, cur.loc))
+      case (BooleanLiteralToken.False, _)        => Parser.skipAndSucceed(BooleanLiteralToken.False, AstExpr.BooleanLiteral(false, cur.loc))
+      case (ident: IdentToken, SimpleToken.LPar) => parseFuncCallExpr(ident)
+      case (ident: IdentToken, _)                => Parser.skipAndSucceed(ident, AstExpr.VarRef(Ident(ident.ident), cur.loc))
+      case (SimpleToken.LPar, _)                 => for {
         lPar <- Parser.eatToken(cur.token)
         innerExpr <- parseExpr()
         rPar <- Parser.eatToken(SimpleToken.RPar)
       } yield innerExpr
-      case _                         => ParserErr.CouldNotParseExpectedConstruct(cur, ExpectedConstruct.PrimaryExpr).toParserFail
+      case _                                     => ParserErr.CouldNotParseExpectedConstruct(cur, ExpectedConstruct.PrimaryExpr).toParserFail
     }
   }
 }
 
+private def parseFuncCallExpr(ident: IdentToken): Parser[AstExpr.FuncCall] = for {
+  identWithLoc <- Parser.eatToken(ident)
+  _ <- Parser.eatToken(SimpleToken.LPar)
+  params <- parseCallParamsList()
+  rPar <- Parser.eatToken(SimpleToken.RPar)
+
+} yield AstExpr.FuncCall((Ident(ident.ident), identWithLoc.loc), params, Loc(identWithLoc.loc.start, rPar.loc.end))
 //helpers
 private def parseIdentWithLoc(): Parser[(Ident, Loc)] =
   Parser.cur.flatMap { received =>
@@ -408,8 +401,29 @@ private def parseBinOpChainTail(
       case Some(op) => for {
         _ <- Parser.eatToken(opToken.token)
         right <- partParser()
-        node = AstBinOp(left, right, (op, opToken.loc), Loc(left.loc.start, right.loc.end))
+        node = AstExpr.BinOp(left, right, (op, opToken.loc), Loc(left.loc.start, right.loc.end))
         result <- parseBinOpChainTail(node, partParser, mapTokenToOp)
       } yield result
     }
   }
+
+
+private def parseCallParamsList(): Parser[List[AstExpr]] = Parser.cur.flatMap { cur =>
+  cur.token match {
+    case SimpleToken.RPar => Parser.succeed(List())
+    case _                => for {
+      exprListHead <- parseExpr()
+      allExpr <- parseCallParamsTail(List(exprListHead))
+    } yield allExpr
+  }
+}
+private def parseCallParamsTail(gathered: List[AstExpr]): Parser[List[AstExpr]] = Parser.cur.flatMap { cur =>
+  cur.token match {
+    case SimpleToken.Comma => for {
+      _ <- Parser.eatToken(cur.token)
+      newExpr <- parseExpr()
+      allExpr <- parseCallParamsTail(gathered :+ newExpr)
+    } yield allExpr
+    case _                 => Parser.succeed(gathered)
+  }
+}

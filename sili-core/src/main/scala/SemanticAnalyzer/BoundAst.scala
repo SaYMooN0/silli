@@ -7,7 +7,7 @@ import TypeSystem.{BinOp, UnOp}
 final case class BoundAstRoot(programName: (Ident, Loc), block: BlockBoundAstNode)
 
 
-final case class BlockBoundAstNode(decls: List[DeclItemBoundAstNode], compoundStmt: CompoundStmtBoundAstNode)
+final case class BlockBoundAstNode(decls: List[DeclItemBoundAstNode], compoundStmt: StmtBoundAstNode.CompoundStmt)
 
 enum DeclItemBoundAstNode {
   case VarDecl(varSym: VarSymbol, symLoc: Loc)
@@ -15,23 +15,13 @@ enum DeclItemBoundAstNode {
   case FuncDecl(funcSym: FuncSymbol, symLoc: Loc, block: BlockBoundAstNode)
 }
 
+enum StmtBoundAstNode {
+  case CompoundStmt(stmts: List[StmtBoundAstNode])
+  case AssignStmt(valueSymbol: ValueSymbol, typedExpr: AnyTypedExpr, loc: Loc)
+  case ProcCall(procSym: ProcSymbol, actualParams: List[AnyTypedExpr], loc: Loc)
+  case IfStmt(condition: BooleanTypedExpr, conditionLoc: Loc, thenStmt: StmtBoundAstNode, elseStmt: StmtBoundAstNode)
+}
 
-//statements
-
-sealed trait StmtBoundAstNode;
-
-final case class CompoundStmtBoundAstNode(stmts: List[StmtBoundAstNode]) extends StmtBoundAstNode
-
-final case class AssignStmtBoundAstNode(valueSymbol: ValueSymbol, typedExpr: AnyTypedExpr, loc: Loc) extends StmtBoundAstNode
-
-final case class ProcCallStmtBoundAstNode(procSym: ProcSymbol, actualParams: List[AnyTypedExpr], loc: Loc) extends StmtBoundAstNode
-
-final case class IfStmtBoundAstNode(
-                                     condition: BooleanTypedExpr,
-                                     conditionLoc: Loc,
-                                     thenStmt: StmtBoundAstNode,
-                                     elseStmt: StmtBoundAstNode
-                                   ) extends StmtBoundAstNode
 
 //typed expressions
 final case class TypedExpr[
@@ -46,21 +36,18 @@ type AnyTypedExpr = TypedExpr[ExprBoundAstNode, TypeSymbol]
 
 type BooleanTypedExpr = TypedExpr[ExprBoundAstNode, TypeSymbol.BooleanSym.type]
 
-//expressions
-sealed trait ExprBoundAstNode;
+enum ExprBoundAstNode {
+  case BooleanLiteral(value: Boolean)
+  case IntegerLiteral(value: Int)
+  case RealLiteral(value: Double)
+  case StringLiteral(value: String)
 
-final case class BooleanLiteralBoundAstNode(value: Boolean) extends ExprBoundAstNode
+  case VarRef(valueSymbol: ValueSymbol, loc: Loc)
 
-final case class IntegerLiteralBoundAstNode(value: Int) extends ExprBoundAstNode
+  case UnOp(inner: ExprBoundAstNode, op: TypeSystem.UnOp, loc: Loc)
 
-final case class RealLiteralBoundAstNode(value: Double) extends ExprBoundAstNode
+  case BinOp(left: ExprBoundAstNode, op: TypeSystem.BinOp, right: ExprBoundAstNode, loc: Loc)
 
-final case class StringLiteralBoundAstNode(value: String) extends ExprBoundAstNode
+  case FuncCall(funcSymbol: FuncSymbol, actualParams: List[AnyTypedExpr], loc: Loc)
 
-final case class VarRefBoundAstNode(valueSymbol: ValueSymbol, loc: Loc) extends ExprBoundAstNode
-
-final case class UnOpBoundAstNode(inner: ExprBoundAstNode, op: UnOp, loc: Loc) extends ExprBoundAstNode
-
-final case class BinOpBoundAstNode(left: ExprBoundAstNode, op: BinOp, right: ExprBoundAstNode, loc: Loc) extends ExprBoundAstNode
-
-final case class FuncCallBoundAstNode(funcSymbol: FuncSymbol, actualParams: List[AnyTypedExpr], loc: Loc) extends StmtBoundAstNode
+}

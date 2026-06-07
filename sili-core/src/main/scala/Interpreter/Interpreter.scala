@@ -114,8 +114,8 @@ private def interpretUserProcCall(procSym: ProcSymbol, actualParamValues: List[V
 //expressions
 private def interpretExpr(expr: ExprBoundAstNode): InterpreterRuntime[Value] = expr match {
   case BooleanLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.BooleanValue(v))
-  case IntegerLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.IntegerValue(v))
-  case RealLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.RealValue(v))
+  case IntegerLiteral(v)             => InterpreterRuntime.pure(Value.IntegerValue(v))
+  case RealLiteralBoundAstNode(v)    => InterpreterRuntime.pure(Value.RealValue(v))
   case StringLiteralBoundAstNode(v) => InterpreterRuntime.pure(Value.StringValue(v))
   case e: VarRefBoundAstNode => interpretVarRefExpr(e)
   case e: UnOpBoundAstNode => interpretUnOpExpr(e)

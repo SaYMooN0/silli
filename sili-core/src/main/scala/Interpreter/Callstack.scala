@@ -1,7 +1,7 @@
 package Interpreter
 
 import Parser.Ident
-import SemanticAnalyzer.{ProcDeclBoundAstNode, ProcedureId, ProcSymbol}
+import SemanticAnalyzer.*
 import TypeSystem.{BuiltInType, Value}
 
 import scala.collection.mutable
@@ -35,7 +35,7 @@ final class Callstack private(private val stack: mutable.Stack[ActivationRecord]
   private def currentAr: Either[CallstackErr, ActivationRecord] = {
     stack.headOption match {
       case Some(ar) => Right(ar)
-      case None => Left(CallstackErr.EmptyCallstack)
+      case None     => Left(CallstackErr.EmptyCallstack)
     }
   }
 
@@ -47,7 +47,7 @@ final class Callstack private(private val stack: mutable.Stack[ActivationRecord]
   def setVariable(ident: Ident, value: Value): Either[CallstackErr, Unit] = {
     currentAr.flatMap { ar =>
       ar.tryFindMemberOwner(ident) match {
-        case None => Left(CallstackErr.VariableNotDeclared(ident))
+        case None          => Left(CallstackErr.VariableNotDeclared(ident))
         case Some(ownerAr) =>
           ownerAr.members.update(ident, ValueOrUndefined.Value(value))
           Right(())
@@ -59,7 +59,7 @@ final class Callstack private(private val stack: mutable.Stack[ActivationRecord]
     currentAr.flatMap { ar =>
       ar.tryFindMember(ident) match {
         case Some(valueOrUndefined) => Right(valueOrUndefined)
-        case None => Left(CallstackErr.VariableNotDeclared(ident))
+        case None                   => Left(CallstackErr.VariableNotDeclared(ident))
       }
     }
   }
