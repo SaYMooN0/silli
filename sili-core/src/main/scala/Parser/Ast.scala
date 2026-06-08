@@ -35,7 +35,7 @@ final case class AstTypedVarsDecl(
                                    varRefs: List[AstExpr.VarRef],
                                    typeAnnotation: (Ident, Loc),
                                    loc: Loc
-                                 );
+                                 )
 
 final case class AstFormalParam(
                                  varRef: (Ident, Loc),
@@ -44,22 +44,22 @@ final case class AstFormalParam(
                                )
 
 enum AstExpr(val loc: Loc) {
-  case BooleanLiteral(value: Boolean, loc: Loc) extends AstExpr(loc)
-  case IntegerLiteral(value: Int, loc: Loc) extends AstExpr(loc)
-  case RealLiteral(value: Double, loc: Loc) extends AstExpr(loc)
-  case StringLiteral(value: String, loc: Loc) extends AstExpr(loc)
-  case UnOp(expr: AstExpr, op: (TypeSystem.UnOp, Loc), loc: Loc) extends AstExpr(loc)
-  case BinOp(left: AstExpr, right: AstExpr, op: (TypeSystem.BinOp, Loc), loc: Loc) extends AstExpr(loc)
-  case FuncCall(funcName: (Ident, Loc), actualParams: List[AstExpr], loc: Loc) extends AstExpr(loc)
-  case VarRef(ident: Ident, loc: Loc) extends AstExpr(loc)
+  case BooleanLiteral(value: Boolean, override val loc: Loc) extends AstExpr(loc)
+  case IntegerLiteral(value: Int, override val loc: Loc) extends AstExpr(loc)
+  case RealLiteral(value: Double, override val loc: Loc) extends AstExpr(loc)
+  case StringLiteral(value: String, override val loc: Loc) extends AstExpr(loc)
+  case UnOp(expr: AstExpr, op: (TypeSystem.UnOp, Loc), override val loc: Loc) extends AstExpr(loc)
+  case BinOp(left: AstExpr, right: AstExpr, op: (TypeSystem.BinOp, Loc), override val loc: Loc) extends AstExpr(loc)
+  case FuncCall(funcName: (Ident, Loc), actualParams: List[AstExpr], override val loc: Loc) extends AstExpr(loc)
+  case VarRef(ident: Ident, override val loc: Loc) extends AstExpr(loc)
 
 }
 
 enum AstStmt(val loc: Loc) {
-  case CompoundStmt(stmts: List[AstStmt], loc: Loc) extends AstStmt(loc)
-  case AssignStmt(varRef: AstExpr.VarRef, expr: AstExpr, loc: Loc) extends AstStmt(loc)
-  case ProcCallStmt(procName: (Ident, Loc), actualParams: List[AstExpr], loc: Loc) extends AstStmt(loc)
-  case IfStmt(condition: AstExpr, thenStmt: Option[AstStmt], elseStmt: Option[AstStmt], loc: Loc) extends AstStmt(loc)
+  case CompoundStmt(stmts: List[AstStmt], override val loc: Loc) extends AstStmt(loc)
+  case AssignStmt(varRef: AstExpr.VarRef, expr: AstExpr, override val loc: Loc) extends AstStmt(loc)
+  case ProcCallStmt(procName: (Ident, Loc), actualParams: List[AstExpr], override val loc: Loc) extends AstStmt(loc)
+  case IfStmt(condition: AstExpr, thenStmt: Option[AstStmt], elseStmt: Option[AstStmt], override val loc: Loc) extends AstStmt(loc)
 
 }
 

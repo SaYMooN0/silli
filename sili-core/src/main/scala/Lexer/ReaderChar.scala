@@ -5,7 +5,7 @@ import java.io.Reader
 case object EOF // end of file
 
 
-type ReaderChar = Char | EOF.type;
+type ReaderChar = Char | EOF.type
 
 extension (reader: Reader) {
   private[Lexer] def readNextInputChar(): ReaderChar = {

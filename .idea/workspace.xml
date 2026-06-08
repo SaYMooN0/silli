@@ -4,11 +4,30 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="29f6f16f-f3c1-4bcc-8021-b7d090301358" name="Changes" comment="">
+    <list default="true" id="29f6f16f-f3c1-4bcc-8021-b7d090301358" name="Changes" comment="Updated parser and semantic analyzer to work with functions">
+      <change afterPath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/functions/StdConversions.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/functions/StdReadLine.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/functions/StdStringFunctions.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pascalProgram" beforeDir="false" afterPath="$PROJECT_DIR$/pascalProgram" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/Callstack.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/Callstack.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/Interpreter.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/Interpreter.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/InterpreterRuntime.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/InterpreterRuntime.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/IdentAndKeywordReader.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/IdentAndKeywordReader.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/Lexer.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/Lexer.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/NumLiteralReader.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/NumLiteralReader.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/ReaderChar.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/ReaderChar.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/StringLiteralReader.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/StringLiteralReader.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/Token.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Lexer/Token.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/Ast.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/Ast.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/BoundAst.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/BoundAst.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/SemanticAnalyzerVisitor.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/SemanticAnalyzerVisitor.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/Symbol.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/Symbol.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/visitor/Expressions.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/SemanticAnalyzer/visitor/Expressions.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/StdLib.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/StdLib.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/procedures/Print.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/procedures/Print.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/BinOp.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/TypeSystem/BinOp.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sili-core/src/test/scala/Parser/ParserSuite.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/test/scala/Parser/ParserSuite.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,15 +93,19 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="jar://C:/Program Files/Java/jdk-17.0.2/lib/src.zip!/java.base/java/io/Reader.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://C:/Program Files/Eclipse Adoptium/jdk-21.0.5.11-hotspot/lib/src.zip!/java.base/java/net/URLClassLoader.java" root0="SKIP_INSPECTION" />
     <setting file="jar://$USER_HOME$/AppData/Local/Coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16-sources.jar!/scala/Function1.scala" root0="SKIP_INSPECTION" />
     <setting file="jar://$USER_HOME$/AppData/Local/Coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16-sources.jar!/scala/NotImplementedError.scala" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/AppData/Local/Coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16-sources.jar!/scala/collection/Iterable.scala" root0="SKIP_INSPECTION" />
     <setting file="jar://$USER_HOME$/AppData/Local/Coursier/cache/v1/https/repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.3.7/scala3-library_3-3.3.7-sources.jar!/scala/compiletime/package.scala" root0="SKIP_INSPECTION" />
   </component>
   <component name="KubernetesApiPersistence">{}</component>
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
 }</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="2" />
   </component>
@@ -100,7 +123,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Application.Main.executor": "Debug",
+    "Application.Main.executor": "Run",
     "MUnit.ParserSuite.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "Remote JVM Debug.debugger.executor": "Debug",
@@ -121,9 +144,10 @@
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.0",
+    "run.code.analysis.last.selected.profile": "pProject Default",
     "sbt Task.debugCli.executor": "Debug",
     "sbt Task.runCli.executor": "Debug",
-    "settings.editor.selected.configurable": "preferences.sourceCode.Scala",
+    "settings.editor.selected.configurable": "configurable.group.appearance",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -132,7 +156,7 @@
       <recent name="Parser" />
     </key>
   </component>
-  <component name="RunManager" selected="Remote JVM Debug.debugger">
+  <component name="RunManager">
     <configuration name="debugger" type="Remote">
       <option name="USE_SOCKET_TRANSPORT" value="true" />
       <option name="SERVER_MODE" value="false" />
@@ -224,7 +248,18 @@
       <workItem from="1780293237532" duration="1906000" />
       <workItem from="1780682780102" duration="2660000" />
       <workItem from="1780692917723" duration="10329000" />
+      <workItem from="1780779350706" duration="19108000" />
+      <workItem from="1780958067869" duration="1414000" />
     </task>
+    <task id="LOCAL-00001" summary="Updated parser and semantic analyzer to work with functions">
+      <option name="closed" value="true" />
+      <created>1780852982289</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1780852982289</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -240,6 +275,26 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Updated parser and semantic analyzer to work with functions" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated parser and semantic analyzer to work with functions" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="scala-line">
+          <url>file://$PROJECT_DIR$/sili-core/src/main/scala/Parser/ParserVisitor.scala</url>
+          <line>85</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="scala-line">
+          <url>file://$PROJECT_DIR$/sili-core/src/main/scala/Parser/ParserVisitor.scala</url>
+          <line>95</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

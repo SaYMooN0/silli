@@ -48,6 +48,6 @@ enum ExprBoundAstNode {
 
   case BinOp(left: ExprBoundAstNode, op: TypeSystem.BinOp, right: ExprBoundAstNode, loc: Loc)
 
-  case FuncCall(funcSymbol: FuncSymbol, actualParams: List[AnyTypedExpr], loc: Loc)
+  case FuncCall(funcSym: FuncSymbol, actualParams: List[AnyTypedExpr], loc: Loc)
 
 }

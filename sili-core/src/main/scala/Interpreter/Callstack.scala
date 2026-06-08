@@ -11,6 +11,7 @@ enum CallstackErr {
   case EmptyCallstack
   case VariableNotDeclared(ident: Ident)
   case ProcedureClosureNotFound(procId: ProcedureId)
+  case FunctionClosureNotFound(id: FunctionId)
   case ActualParamsCountMismatch(procName: Ident, expected: Int, actual: Int)
 }
 
@@ -22,8 +23,9 @@ object Callstack {
       nestingLevel = 1,
       staticLink = None,
       members = mutable.Map(),
-      procedures = mutable.Map()
-    );
+      procedures = mutable.Map(),
+      functions = mutable.Map()
+    )
     val stack = mutable.Stack[ActivationRecord]()
     stack.push(ar)
     Callstack(stack)
@@ -64,52 +66,90 @@ final class Callstack private(private val stack: mutable.Stack[ActivationRecord]
     }
   }
 
-  def declareProcedureClosure(procDecl: ProcDeclBoundAstNode): Either[CallstackErr, Unit] =
-    currentAr.map { ar =>
-      ar.procedures.update(
-        procDecl.procSym.id,
-        ProcedureClosure(
-          declarationNode = procDecl,
-          definingAr = ar
-        )
-      )
-    }
+  def declareProcedureClosure(procDecl: DeclItemBoundAstNode.ProcDecl): Either[CallstackErr, Unit] = {
+    currentAr.map { ar => ar.procedures.update(procDecl.procSym.id, ProcedureClosure(procDecl, ar)) }
+  }
 
-  def enterProcCall(procSym: ProcSymbol, actualParamValues: List[Value]): Either[CallstackErr, ProcDeclBoundAstNode] = {
+  def declareFunctionClosure(funcDecl: DeclItemBoundAstNode.FuncDecl): Either[CallstackErr, Unit] = {
+    currentAr.map { ar => ar.functions.update(funcDecl.funcSym.id, FunctionClosure(funcDecl, ar)) }
+  }
+
+  private def enterCallableCall[D](
+                                    callableName: Ident,
+                                    formalParams: List[ParamSymbol],
+                                    scopeLevel: Int,
+                                    actualParamValues: List[Value],
+                                    arType: ArType,
+                                    findClosure: ActivationRecord => Option[(D, ActivationRecord)],
+                                    closureNotFoundErr: => CallstackErr,
+                                    extraMembers: List[(Ident, ValueOrUndefined)] = List.empty
+                                  ): Either[CallstackErr, D] = {
     currentAr.flatMap { ar =>
-      ar.tryFindProcedureClosure(procSym.id) match {
-        case None => Left(CallstackErr.ProcedureClosureNotFound(procSym.id))
+      findClosure(ar) match {
+        case None => Left(closureNotFoundErr)
 
-        case Some(procClosure) =>
-          if procSym.formalParams.length != actualParamValues.length then {
-            Left(CallstackErr.ActualParamsCountMismatch(procSym.procName, procSym.formalParams.length, actualParamValues.length))
+        case Some((declarationNode, definingAr)) =>
+          if formalParams.length != actualParamValues.length then {
+            Left(CallstackErr.ActualParamsCountMismatch(
+              callableName,
+              formalParams.length,
+              actualParamValues.length
+            ))
           } else {
+            val paramMembers = formalParams
+              .zip(actualParamValues)
+              .map { case (formalParam, actualValue) =>
+                formalParam.name -> ValueOrUndefined.Value(actualValue)
+              }
+
             val newMembers = mutable.Map.from(
-              procSym.formalParams
-                .zip(actualParamValues)
-                .map { case (formalParam, actualValue) =>
-                  formalParam.varName -> ValueOrUndefined.Value(actualValue)
-                }
+              paramMembers ++ extraMembers
             )
 
             val newAr = ActivationRecord(
-              name = procSym.procName.value,
-              t = ArType.Procedure,
-              nestingLevel = procSym.scopeLevel + 1,
-              staticLink = Some(procClosure.definingAr),
+              name = callableName.value,
+              t = arType,
+              nestingLevel = scopeLevel + 1,
+              staticLink = Some(definingAr),
               members = newMembers,
-              procedures = mutable.Map()
+              procedures = mutable.Map(),
+              functions = mutable.Map()
             )
+
             stack.push(newAr)
-            Right(procClosure.declarationNode)
+
+            Right(declarationNode)
           }
       }
     }
   }
 
-  def leaveProcCall(): Unit =
-    currentAr.map { _ => stack.pop() }
+  def enterProcCall(procSym: ProcSymbol, actualParamValues: List[Value]): Either[CallstackErr, DeclItemBoundAstNode.ProcDecl] = {
+    enterCallableCall(
+      procSym.procName, procSym.formalParams, procSym.scopeLevel, actualParamValues, ArType.Procedure,
+      findClosure = ar =>
+        ar.tryFindProcedureClosure(procSym.id).map { closure =>
+          (closure.declarationNode, closure.definingAr)
+        },
+      closureNotFoundErr = CallstackErr.ProcedureClosureNotFound(procSym.id)
+    )
+  }
 
+  def enterFuncCall(funcSym: FuncSymbol, actualParamValues: List[Value]): Either[CallstackErr, DeclItemBoundAstNode.FuncDecl] = {
+    enterCallableCall(
+      funcSym.funcName, funcSym.formalParams, funcSym.scopeLevel, actualParamValues, ArType.Function,
+      findClosure = ar =>
+        ar.tryFindFunctionClosure(funcSym.id).map { closure =>
+          (closure.declarationNode, closure.definingAr)
+        },
+      closureNotFoundErr = CallstackErr.FunctionClosureNotFound(funcSym.id),
+      extraMembers = List(FuncResultSymbol.ResultIdent -> ValueOrUndefined.Undefined)
+    )
+  }
+
+  def leaveCall(): Either[CallstackErr, Unit] = {
+    currentAr.map { _ => stack.pop() }
+  }
 }
 
 private final case class ActivationRecord(
@@ -118,7 +158,8 @@ private final case class ActivationRecord(
                                            nestingLevel: Int,
                                            staticLink: Option[ActivationRecord],
                                            members: mutable.Map[Ident, ValueOrUndefined],
-                                           procedures: mutable.Map[ProcedureId, ProcedureClosure]
+                                           procedures: mutable.Map[ProcedureId, ProcedureClosure],
+                                           functions: mutable.Map[FunctionId, FunctionClosure]
                                          ) {
   def tryFindMemberOwner(ident: Ident): Option[ActivationRecord] = {
     if members.contains(ident) then Some(this)
@@ -134,12 +175,21 @@ private final case class ActivationRecord(
     procedures
       .get(procId)
       .orElse(staticLink.flatMap(_.tryFindProcedureClosure(procId)))
+
+  def tryFindFunctionClosure(funcId: FunctionId): Option[FunctionClosure] =
+    functions
+      .get(funcId)
+      .orElse(staticLink.flatMap(_.tryFindFunctionClosure(funcId)))
+
 }
 
 enum ArType {
-  case Program;
-  case Procedure;
+  case Program
+  case Procedure
+  case Function
 }
 
 
-final case class ProcedureClosure(declarationNode: ProcDeclBoundAstNode, definingAr: ActivationRecord); 
+final case class ProcedureClosure(declarationNode: DeclItemBoundAstNode.ProcDecl, definingAr: ActivationRecord);
+
+final case class FunctionClosure(declarationNode: DeclItemBoundAstNode.FuncDecl, definingAr: ActivationRecord); 

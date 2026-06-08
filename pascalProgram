@@ -1,5 +1,29 @@
 program Main;
+
+function Add(a : integer; b : integer) : integer;
 begin
-  print("hello");
-  print("world");
+  result := a + b;
+end;
+
+function DoubleValue(x : integer) : integer;
+begin
+  result := x * 2;
+end;
+
+function Calc(a : integer; b : integer; c : integer) : integer;
+begin
+  result := Add(a, b) + DoubleValue(c);
+end;
+
+var
+  x : integer;
+  y : integer;
+  text : string;
+
+begin
+  x := Add(3, 5);
+  y := Calc(x, 2, 10);
+
+{  text := convertIntegerToString(y);}
+  print(text);
 end.

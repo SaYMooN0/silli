@@ -8,13 +8,13 @@ enum NumLiteralReaderErr(val pos: Pos) {
 private[Lexer] object NumLiteralReader {
   private case class NumLiteralReadingCtx(capRev: List[Char], literalStartPos: Pos, readingCtx: ReadingCtx)
 
-  private type NumLiteral = IntegerNumLiteralToken | RealNumLiteralToken;
+  private type NumLiteral = IntegerNumLiteralToken | RealNumLiteralToken
 
   def readFromFirstDigit(firstDigit: Char, ctx: ReadingCtx): (
     ReadingCtx, Either[NumLiteralReaderErr, TokenWithLoc[NumLiteral]])
   = {
     if (!firstDigit.isDigit) throw new Error(s"'$firstDigit' passed to the NumLiteralReader must be a digit")
-    val literalReadingCtx = NumLiteralReadingCtx(List(firstDigit), ctx.currentPos, ctx.advanceInSameLine());
+    val literalReadingCtx = NumLiteralReadingCtx(List(firstDigit), ctx.currentPos, ctx.advanceInSameLine())
     continueNumLiteralTillOut(literalReadingCtx)
   }
 

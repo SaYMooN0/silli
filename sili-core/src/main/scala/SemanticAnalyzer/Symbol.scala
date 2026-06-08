@@ -5,7 +5,7 @@ import Parser.Ident
 import TypeSystem.BuiltInType
 
 
-type SemanticSymbol = TypeSymbol | ValueSymbol | ProcSymbol | FuncSymbol;
+type SemanticSymbol = TypeSymbol | ValueSymbol | ProcSymbol | FuncSymbol
 
 enum TypeSymbol(val spec: BuiltInType) { //only built in types are supported for now
   case IntegerSym extends TypeSymbol(BuiltInType.IntegerT)
@@ -36,7 +36,11 @@ final case class VarSymbol(name: Ident, typeSym: TypeSymbol, declOrigin: UserDec
 final case class ParamSymbol(name: Ident, typeSym: TypeSymbol, declOrigin: DeclOrigin) extends ValueSymbol
 
 final case class FuncResultSymbol(typeSym: TypeSymbol, declOrigin: UserDeclOrigin) extends ValueSymbol {
-  override val name: Ident = Ident("result")
+  override val name: Ident = FuncResultSymbol.ResultIdent
+}
+
+object FuncResultSymbol {
+  def ResultIdent: Ident = Ident("result")
 }
 
 final case class ProcSymbol(
@@ -58,9 +62,9 @@ final case class FuncSymbol(
 
 type DeclOrigin = BuiltinDeclOrigin.type | UserDeclOrigin
 
-object BuiltinDeclOrigin;
+object BuiltinDeclOrigin
 
-final case class UserDeclOrigin(declLoc: Loc);
+final case class UserDeclOrigin(declLoc: Loc)
 
 opaque type ProcedureId = Int
 

@@ -9,7 +9,7 @@ private[Lexer] object StringLiteralReader {
   private case class StringLiteralReadingCtx(capRev: List[Char], openQuotePos: Pos, readingCtx: ReadingCtx)
 
   def readFromQuote(ctx: ReadingCtx): (ReadingCtx, Either[StringLiteralReaderErr, TokenWithLoc[StringLiteralToken]]) = {
-    val stringLiteralReadingCtx = StringLiteralReadingCtx(List(), ctx.currentPos, ctx.advanceInSameLine());
+    val stringLiteralReadingCtx = StringLiteralReadingCtx(List(), ctx.currentPos, ctx.advanceInSameLine())
     continueLiteralTillOut(stringLiteralReadingCtx)
   }
 

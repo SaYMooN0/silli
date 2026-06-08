@@ -118,7 +118,7 @@ private def analyzeFuncCallExpr(funcCall: AstExpr.FuncCall): SemanticAnalyzer[Op
             Some(
               TypedExpr(
                 ExprBoundAstNode.FuncCall(
-                  funcSymbol = funcSym,
+                  funcSym = funcSym,
                   actualParams = actualParams,
                   loc = funcCall.loc
                 ),

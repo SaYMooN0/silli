@@ -2,7 +2,7 @@ package Interpreter
 
 import Lexer.Loc
 import Parser.Ident
-import SemanticAnalyzer.ProcSymbol
+import SemanticAnalyzer.{FuncSymbol, ProcSymbol}
 import TypeSystem.Value
 
 final class RuntimeCtx private(
@@ -19,7 +19,7 @@ final case class InterpreterRuntime[+A](run: RuntimeCtx => Either[RuntimeErr, (A
     InterpreterRuntime { ctx =>
       run(ctx) match {
         case Right((value, nextCtx)) => binder(value).run(nextCtx)
-        case Left(err) => Left(err)
+        case Left(err)               => Left(err)
       }
     }
 
@@ -42,15 +42,29 @@ object InterpreterRuntime {
 
   def callstack: InterpreterRuntime[Callstack] = currentCtx.map(_.callstack)
 
-  def callStdLibProcedure(procSym: ProcSymbol, actualParams: List[Value], callLoc: Loc): InterpreterRuntime[Unit] =
+  def callStdLibProcedure(procSym: ProcSymbol, actualParams: List[Value], callLoc: Loc): InterpreterRuntime[Unit] = {
     currentCtx.flatMap { ctx =>
       StdLib.StdLib.tryCallProcedure(procSym.id, actualParams, ctx.io, callLoc) match {
-        case Some(Right(())) => InterpreterRuntime.pure(())
+        case Some(Right(()))    => InterpreterRuntime.pure(())
         case Some(Left(errMsg)) => InterpreterRuntime.failWithInternalErr(callLoc, errMsg.msg)
-        case None => InterpreterRuntime.failWithInternalErr(
+        case None               => InterpreterRuntime.failWithInternalErr(
           callLoc,
           s"StdLib procedure implementation was not found: ${procSym.procName.value}"
         )
       }
     }
+  }
+
+  def callStdLibFunction(funcSym: FuncSymbol, actualParams: List[Value], callLoc: Loc): InterpreterRuntime[Value] = {
+    currentCtx.flatMap { ctx =>
+      StdLib.StdLib.tryCallFunction(funcSym.id, actualParams, ctx.io, callLoc) match {
+        case Some(Right(value)) => InterpreterRuntime.pure(value)
+        case Some(Left(errMsg)) => InterpreterRuntime.failWithInternalErr(callLoc, errMsg.msg)
+        case None               => InterpreterRuntime.failWithInternalErr(
+          callLoc,
+          s"StdLib function implementation was not found: ${funcSym.funcName.value}"
+        )
+      }
+    }
+  }
 }

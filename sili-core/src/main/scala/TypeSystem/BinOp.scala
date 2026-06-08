@@ -15,9 +15,9 @@ enum ArithmeticBinOps() {
   case Mul extends ArithmeticBinOps()
 }
 
-case object RealDivBinOp;
+case object RealDivBinOp
 
-case object IntDivBinOp;
+case object IntDivBinOp
 
 
 enum EqualityBinOps {

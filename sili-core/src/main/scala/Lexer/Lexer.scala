@@ -58,7 +58,7 @@ object Lexer {
         case (newCtx, Right(lit)) => (newCtx, lit)
       }
 
-      case (a: Char, b) if (a.isDigit) => NumLiteralReader.readFromFirstDigit(a, ctx) match {
+      case (a: Char, b) if a.isDigit => NumLiteralReader.readFromFirstDigit(a, ctx) match {
         case (newCtx, Left(err)) => (newCtx, TokenizingErr.NumLiteralErr(err))
         case (newCtx, Right(token)) => (newCtx, token)
       }

@@ -18,8 +18,8 @@ type Token =
 
 
 enum BooleanLiteralToken {
-  case True;
-  case False;
+  case True
+  case False
 }
 
 final case class IntegerNumLiteralToken(value: Int)
@@ -30,7 +30,7 @@ final case class StringLiteralToken(value: String)
 
 final case class BuiltInTypeNameToken(typeSpec: BuiltInType)
 
-final case class IdentToken(ident: String);
+final case class IdentToken(ident: String)
 
 enum SimpleToken {
   case Assign; //:=
@@ -69,18 +69,18 @@ enum OpToken {
 }
 
 enum SyntaxKeywordToken {
-  case Begin;
-  case End;
-  case Program;
-  case If;
-  case Then;
-  case Else;
+  case Begin
+  case End
+  case Program
+  case If
+  case Then
+  case Else
 }
 
 enum DeclarationKeywordToken {
-  case Var;
-  case Procedure;
-  case Function;
+  case Var
+  case Procedure
+  case Function
 }
 
 type Keyword =
@@ -104,7 +104,7 @@ def mapToKeyword(str: String): Option[Keyword] = str match {
   //DeclarationKeywordToken
   case "var"       => Some(DeclarationKeywordToken.Var)
   case "procedure" => Some(DeclarationKeywordToken.Procedure)
-  case "function"  => Some(DeclarationKeywordToken.Procedure)
+  case "function"  => Some(DeclarationKeywordToken.Function)
   //SyntaxKeywordToken
   case "end"     => Some(SyntaxKeywordToken.End)
   case "begin"   => Some(SyntaxKeywordToken.Begin)

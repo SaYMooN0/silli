@@ -5,13 +5,13 @@ object IdentAndKeywordReader {
 
   private case class IdentAndKeywordReadingCtx(capRev: List[Char], startPos: Pos, readingCtx: ReadingCtx)
 
-  private type IdentOrKeyword = IdentToken | Keyword;
+  private type IdentOrKeyword = IdentToken | Keyword
 
   def readFromFirstChar(firsChar: Char, ctx: ReadingCtx):
   (ReadingCtx, TokenWithLoc[IdentOrKeyword])
   = {
     if (!IdentRules.isCorrectIdentStarter(firsChar)) throw new Error(s"'$firsChar' passed to the IdentAndKeywordReader must be a correct ident starter")
-    val literalReadingCtx = IdentAndKeywordReadingCtx(List(firsChar), ctx.currentPos, ctx.advanceInSameLine());
+    val literalReadingCtx = IdentAndKeywordReadingCtx(List(firsChar), ctx.currentPos, ctx.advanceInSameLine())
     continueTillOut(literalReadingCtx)
   }
 
