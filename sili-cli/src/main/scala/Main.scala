@@ -1,62 +1,51 @@
-package sili.cli
+import Interpreter.{FailedInterpretationFlow, IOCtx}
 
-import Interpreter.{IOCtx, InterpretationSuccess}
-import SemanticAnalyzer.BoundAstRoot
-
-import scala.io.Source
+import java.io.StringReader
+import scala.io.{Source, StdIn}
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val input = Source.fromFile("pascalProgram").mkString
-    val ioCtx = IOCtx.createForConsole()
+    val filePath =
+      if (args.nonEmpty) args(0)
+      else "pascalProgram"
 
-    val interpreterResult: Either[FailedInterpretationFlow, InterpretationSuccess.type] =
-      Parser.constructAst(input) match {
-        case Left(err) =>
-          Left(FailedInterpretationFlow.ParserErr(err))
+    val source = Source.fromFile(filePath)
 
-        case Right(ast) =>
-          SemanticAnalyzer.analyzeProgramAst(ast) match {
-            case Left(semanticErrs) =>
-              Left(FailedInterpretationFlow.SemanticErrs(semanticErrs))
 
-            case Right(ast: BoundAstRoot) =>
-              Interpreter.interpretBoundAst(ast, ioCtx) match {
-                case Left(runtimeErr) =>
-                  Left(FailedInterpretationFlow.RuntimeErr(runtimeErr))
+    try {
+      val input = new StringReader(source.mkString)
 
-                case Right(success) =>
-                  Right(success)
-              }
-          }
+      val ioCtx = new IOCtx {
+        override def read(): String = StdIn.readLine()
+
+        override def write(value: String): Unit = println(value)
       }
 
-    val strToPrint = interpreterResult match {
-      case Left(ff) => FailedInterpretationFlow.toString(ff)
-      case Right(_) => "Success"
-    }
+      val interpreterResult = Interpreter.runInterpreter(input, ioCtx)
 
-    println(strToPrint)
+      val strToPrint = interpreterResult match {
+        case Left(ff) => ErrStringifier.errToString(ff)
+        case Right(_) => "Success"
+      }
+
+      println(strToPrint)
+    } finally {
+      source.close()
+    }
   }
 }
 
-private enum FailedInterpretationFlow {
-  case ParserErr(err: Parser.ParserErr)
-  case SemanticErrs(errs: List[SemanticAnalyzer.SemanticErr])
-  case RuntimeErr(err: Interpreter.RuntimeErr)
-}
-
-private object FailedInterpretationFlow {
+private object ErrStringifier {
   private def toStringParserErr(e: Parser.ParserErr): String = e.toString
 
   private def toStringSemanticErr(e: SemanticAnalyzer.SemanticErr): String = e.toString
 
   private def toStringRuntimeErr(e: Interpreter.RuntimeErr): String = e.toString
 
-  def toString(failedFlow: FailedInterpretationFlow): String =
+  def errToString(failedFlow: FailedInterpretationFlow): String =
     failedFlow match {
-      case parserErr: ParserErr => toStringParserErr(parserErr.err)
-      case semanticErrs: SemanticErrs => semanticErrs.errs.map(toStringSemanticErr).mkString("\n")
-      case runtimeErr: RuntimeErr => toStringRuntimeErr(runtimeErr.err)
+      case parserErr: FailedInterpretationFlow.ParserErr       => toStringParserErr(parserErr.err)
+      case semanticErrs: FailedInterpretationFlow.SemanticErrs => semanticErrs.errs.map(toStringSemanticErr).mkString("\n")
+      case runtimeErr: FailedInterpretationFlow.RuntimeErr     => toStringRuntimeErr(runtimeErr.err)
     }
 }

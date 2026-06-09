@@ -2,10 +2,10 @@ package Parser
 
 import Lexer.*
 
-import java.io.StringReader
+import java.io.Reader
 
-def constructAst(str: String): Either[ParserErr, AstRoot] = {
-  val parsingCtxRes = ParsingCtx.init(new StringReader(str), Lexer.getDefaultReadNextTokenFunc)
+def constructAst(reader: Reader): Either[ParserErr, AstRoot] = {
+  val parsingCtxRes = ParsingCtx.init(reader, Lexer.getDefaultReadNextTokenFunc)
   parsingCtxRes match {
     case Right(ctx) => parseProgramAst().run(ctx) match {
       case Left(err)         => Left(err)

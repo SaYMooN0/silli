@@ -11,7 +11,7 @@ private[StdLib] def StdPrint = initStdProcedure(
   (actualParamValues, io, callLoc) => {
     actualParamValues match {
       case List(Value.StringValue(text)) => {
-        io.writeLine(text)
+        io.write(text)
         Right(())
       }
 

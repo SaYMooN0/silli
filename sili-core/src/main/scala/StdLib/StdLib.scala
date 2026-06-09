@@ -35,7 +35,7 @@ object StdLib {
     functions.StdStringFromAsciiCode,
     functions.StdAsciiCodeFromString,
 
-    functions.StdReadLine
+    functions.StdRead
   )
 
   private val proceduresById: Map[ProcedureId, StdProcedure] =

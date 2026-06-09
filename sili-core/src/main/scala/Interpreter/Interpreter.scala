@@ -4,17 +4,39 @@ import Lexer.Loc
 import SemanticAnalyzer.*
 import TypeSystem.Value
 
+import java.io.Reader
+
 
 object InterpretationSuccess
 
+enum FailedInterpretationFlow {
+  case ParserErr(err: Parser.ParserErr)
+  case SemanticErrs(errs: List[SemanticErr])
+  case RuntimeErr(err: Interpreter.RuntimeErr)
+}
 
-def interpretBoundAst(boundAst: BoundAstRoot, ioCtx: IOCtx): Either[RuntimeErr, InterpretationSuccess.type] = {
+def runInterpreter(reader: Reader, io: IOCtx): Either[FailedInterpretationFlow, InterpretationSuccess.type] = {
+  Parser.constructAst(reader) match {
+    case Left(err)  => Left(FailedInterpretationFlow.ParserErr(err))
+    case Right(ast) => analyzeProgramAst(ast) match {
+      case Left(semanticErrs) => Left(FailedInterpretationFlow.SemanticErrs(semanticErrs))
+
+      case Right(ast: BoundAstRoot) => interpretBoundAst(ast, io) match {
+        case Left(runtimeErr) => Left(FailedInterpretationFlow.RuntimeErr(runtimeErr))
+        case Right(success)   => Right(success)
+      }
+    }
+  }
+}
+
+private def interpretBoundAst(boundAst: BoundAstRoot, ioCtx: IOCtx): Either[RuntimeErr, InterpretationSuccess.type] = {
   val initialRuntime = RuntimeCtx.init(boundAst.programName._1, ioCtx)
   interpretAstRoot(boundAst).run(initialRuntime) match {
     case Right((_, _)) => Right(InterpretationSuccess)
     case Left(err)     => Left(err)
   }
 }
+
 private def interpretAstRoot(astRoot: BoundAstRoot): InterpreterRuntime[Unit] =
   interpretBlock(astRoot.block)
 
@@ -23,6 +45,7 @@ private def interpretBlock(block: BlockBoundAstNode): InterpreterRuntime[Unit] =
     _ <- interpretBlockDecls(block.decls)
     _ <- interpretCompoundStmt(block.compoundStmt)
   } yield ()
+
 private def interpretBlockDecls(decls: List[DeclItemBoundAstNode]): InterpreterRuntime[Unit] = {
   decls.foldLeft(InterpreterRuntime.pure(())) { (acc, decl) =>
     acc.flatMap { _ =>
@@ -36,6 +59,7 @@ private def interpretBlockDecls(decls: List[DeclItemBoundAstNode]): InterpreterR
     }
   }
 }
+
 //statements
 private def interpretStmt(stmt: StmtBoundAstNode) = stmt match {
   case s: StmtBoundAstNode.CompoundStmt => interpretCompoundStmt(s)
@@ -43,6 +67,7 @@ private def interpretStmt(stmt: StmtBoundAstNode) = stmt match {
   case s: StmtBoundAstNode.ProcCall     => interpretProcCallStmt(s)
   case s: StmtBoundAstNode.IfStmt       => interpretIfStmt(s)
 }
+
 private def interpretCompoundStmt(compoundStmt: StmtBoundAstNode.CompoundStmt): InterpreterRuntime[Unit] = {
   compoundStmt.stmts.foldLeft(
     InterpreterRuntime.pure(())
@@ -50,6 +75,7 @@ private def interpretCompoundStmt(compoundStmt: StmtBoundAstNode.CompoundStmt): 
     case (acc, stmt) => acc.flatMap(_ => interpretStmt(stmt))
   }
 }
+
 private def interpretAssignStmt(assignStmt: StmtBoundAstNode.AssignStmt): InterpreterRuntime[Unit] = {
   for {
     value <- interpretExpr(assignStmt.typedExpr.expr)
@@ -98,6 +124,7 @@ private def interpretUserProcCall(
     callLoc = callLoc
   ) { procDecl => interpretBlock(procDecl.block) }
 }
+
 //expressions
 private def interpretExpr(expr: ExprBoundAstNode): InterpreterRuntime[Value] = expr match {
   case ExprBoundAstNode.BooleanLiteral(v) => InterpreterRuntime.pure(Value.BooleanValue(v))
@@ -109,6 +136,7 @@ private def interpretExpr(expr: ExprBoundAstNode): InterpreterRuntime[Value] = e
   case e: ExprBoundAstNode.UnOp           => interpretUnOpExpr(e)
   case e: ExprBoundAstNode.BinOp          => interpretBinOpExpr(e)
 }
+
 private def interpretVarRefExpr(expr: ExprBoundAstNode.VarRef): InterpreterRuntime[Value] = {
   InterpreterRuntime.callstack.flatMap { callstack =>
     fromCallstackResult(callstack.getVariable(expr.valueSymbol.name), expr.loc).flatMap {
@@ -117,6 +145,7 @@ private def interpretVarRefExpr(expr: ExprBoundAstNode.VarRef): InterpreterRunti
     }
   }
 }
+
 private def interpretFuncCallExpr(funcCallExpr: ExprBoundAstNode.FuncCall): InterpreterRuntime[Value] = {
   for {
     actualParamValues <- interpretActualParamValues(funcCallExpr.actualParams)
@@ -126,6 +155,7 @@ private def interpretFuncCallExpr(funcCallExpr: ExprBoundAstNode.FuncCall): Inte
     }
   } yield result
 }
+
 private def interpretUserFuncCall(
                                    funcSym: FuncSymbol,
                                    actualParamValues: List[Value],
@@ -154,6 +184,7 @@ private def interpretUserFuncCall(
     } yield result
   }
 }
+
 private def interpretUnOpExpr(expr: ExprBoundAstNode.UnOp): InterpreterRuntime[Value] = for {
   innerExpr <- interpretExpr(expr.inner)
   result <- TypeSystem.UnOpRules.applyOp(expr.op, innerExpr) match {
@@ -189,6 +220,7 @@ private def withEnteredUserCall[D, A](
     }
   } yield result
 }
+
 private def interpretActualParamValues(actualParams: List[AnyTypedExpr]): InterpreterRuntime[List[Value]] = {
   actualParams.foldLeft(InterpreterRuntime.pure(List.empty[Value])) {
     (acc, typedExpr) =>
@@ -207,10 +239,11 @@ private def fromCallstackResult[A](result: Either[CallstackErr, A], loc: Loc): I
       case CallstackErr.EmptyCallstack                                        => throw new Error(s"Somehow callstack turned out to be empty on the: $loc")
       case CallstackErr.ActualParamsCountMismatch(procName, expected, actual) => throw new Error(s"Procedure '${procName.value}' expected $expected actual params, but got $actual. Loc: $loc")
       case CallstackErr.ProcedureClosureNotFound(procId)                      => throw new Error(s"Procedure closure was not found. Procedure id: $procId. Loc: $loc")
-      case CallstackErr.FunctionClosureNotFound(funcId)                            => throw new Error(s"Function closure was not found. Function id: $funcId. Loc: $loc")
+      case CallstackErr.FunctionClosureNotFound(funcId)                       => throw new Error(s"Function closure was not found. Function id: $funcId. Loc: $loc")
     }
   }
 }
+
 private def failFromOpEvalErr(loc: Loc, err: TypeSystem.OpEvalErr): InterpreterRuntime[Nothing] =
   err match {
     case TypeSystem.OpEvalErr.DivisionByZero       => InterpreterRuntime.fail(RuntimeErr.DivisionByZero(loc))
