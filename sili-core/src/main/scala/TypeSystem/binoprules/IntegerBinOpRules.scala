@@ -10,7 +10,7 @@ private[TypeSystem] object IntegerBinOpRules {
       ArithmeticBinOps.Sub -> checkedIntIntToInt((a, b) => java.lang.Math.subtractExact(a, b)),
       ArithmeticBinOps.Mul -> checkedIntIntToInt((a, b) => java.lang.Math.multiplyExact(a, b)),
       IntDivBinOp -> checkedIntDiv,
-      IntDivBinOp -> checkedIntIntToInt((a, b) => a % b),
+      ModBinOp -> checkedIntIntToInt((a, b) => a % b),
       RealDivBinOp -> intRealDivToReal,
 
       EqualityBinOps.Equal -> intIntToBool(_ == _),

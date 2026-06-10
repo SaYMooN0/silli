@@ -1,15 +1,17 @@
 program Main;
-
-function Three : integer;
+function Factorial(n : integer) : integer;
 begin
-  result := 1 + 2;
+  if n <= 1 then
+    result := 1
+  else
+    result := n * Factorial(n - 1);
 end;
-
 var
-  x : real;
-  y : real;
+  n,  answer : integer;
   text : string;
-
 begin
-  x := Three();
+  n := 5;
+  answer := Factorial(n);
+  text := convertIntegerToString(answer);
+  printLine(text);
 end.

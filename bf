@@ -1,14 +1,15 @@
-program BrainfuckInterpreter;
+program BFInterpreter;
 
 var
-  programText : string;
-  pc : integer;
-
   leftTape : string;
   rightTape : string;
   currentCell : integer;
 
   inputCode : integer;
+  
+  programText : string;
+  pc : integer;
+
 
 procedure resetState;
 begin
