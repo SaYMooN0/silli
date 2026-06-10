@@ -201,3 +201,52 @@ private[StdLib] def StdAsciiCodeFromString = initStdFunction(
     }
   }
 )
+private[StdLib] def StdStringConcat = initStdFunction(
+  "stringConcat",
+  List(
+    ("left", TypeSymbol.StringSym),
+    ("right", TypeSymbol.StringSym)
+  ),
+  TypeSymbol.StringSym,
+  (actualParamValues, io, callLoc) => {
+    actualParamValues match {
+      case List(Value.StringValue(left), Value.StringValue(right)) =>
+        Right(Value.StringValue(left + right))
+
+      case other =>
+        stringExpected("stringConcat", "two string arguments", other)
+    }
+  }
+)
+
+private[StdLib] def StdStringSubstring = initStdFunction(
+  "stringSubstring",
+  List(
+    ("value", TypeSymbol.StringSym),
+    ("start", TypeSymbol.IntegerSym),
+    ("count", TypeSymbol.IntegerSym)
+  ),
+  TypeSymbol.StringSym,
+  (actualParamValues, io, callLoc) => {
+    actualParamValues match {
+      case List(Value.StringValue(value), Value.IntegerValue(start), Value.IntegerValue(count)) =>
+        if count < 0 then
+          Left(StdLibCallErrMsg(
+            s"Built-in function 'stringSubstring' expected non-negative count, but got: $count"
+          ))
+        else if start < 0 || start > value.length then
+          Left(StdLibCallErrMsg(
+            s"Built-in function 'stringSubstring' got invalid start index: $start. Expected index from 0 to ${value.length}."
+          ))
+        else if start + count > value.length then
+          Left(StdLibCallErrMsg(
+            s"Built-in function 'stringSubstring' got invalid count: $count. Start index is $start, string length is ${value.length}."
+          ))
+        else
+          Right(Value.StringValue(value.substring(start, start + count)))
+
+      case other =>
+        stringExpected("stringSubstring", "one string argument and two integer arguments", other)
+    }
+  }
+)

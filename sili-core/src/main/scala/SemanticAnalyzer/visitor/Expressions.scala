@@ -39,7 +39,7 @@ private def analyzeVarRef(varRef: AstExpr.VarRef): SemanticAnalyzer[Option[AnyTy
         ExprBoundAstNode.VarRef(vSym, varRef.loc),
         vSym.typeSym
       )))
-      
+
       case Some(sym) => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.ExpectedValueSym(sym, varRef.loc))
       case None      => SemanticAnalyzer.reportErrAndMapNone(SemanticErr.UndeclaredValueSym(ident, varRef.loc))
 
@@ -66,9 +66,7 @@ private def analyzeUnOp(node: AstExpr.UnOp): SemanticAnalyzer[Option[AnyTypedExp
     }
   } yield result
 }
-private def analyzeBinOp(
-                          node: AstExpr.BinOp
-                        ): SemanticAnalyzer[Option[AnyTypedExpr]] = {
+private def analyzeBinOp(node: AstExpr.BinOp): SemanticAnalyzer[Option[AnyTypedExpr]] = {
   for {
     leftExprOpt <- analyzeExpr(node.left)
     rightExprOpt <- analyzeExpr(node.right)

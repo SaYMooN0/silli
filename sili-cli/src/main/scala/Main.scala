@@ -14,15 +14,9 @@ object Main {
 
     try {
       val input = new StringReader(source.mkString)
-
-      val ioCtx = new IOCtx {
-        override def read(): String = StdIn.readLine()
-
-        override def write(value: String): Unit = println(value)
-      }
+      val ioCtx = IOCtx.createForConsole()
 
       val interpreterResult = Interpreter.runInterpreter(input, ioCtx)
-
       val strToPrint = interpreterResult match {
         case Left(ff) => ErrStringifier.errToString(ff)
         case Right(_) => "Success"
@@ -48,4 +42,17 @@ private object ErrStringifier {
       case semanticErrs: FailedInterpretationFlow.SemanticErrs => semanticErrs.errs.map(toStringSemanticErr).mkString("\n")
       case runtimeErr: FailedInterpretationFlow.RuntimeErr     => toStringRuntimeErr(runtimeErr.err)
     }
+}
+
+object IOCtx {
+  def createForConsole(): IOCtx = new IOCtx {
+    override def readLine(): String =
+      StdIn.readLine()
+
+    override def readSingleCharAsAsciiCode(): Int =
+      System.in.read()
+
+    override def write(value: String): Unit =
+      print(value)
+  }
 }

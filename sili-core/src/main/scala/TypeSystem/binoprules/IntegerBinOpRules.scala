@@ -10,6 +10,7 @@ private[TypeSystem] object IntegerBinOpRules {
       ArithmeticBinOps.Sub -> checkedIntIntToInt((a, b) => java.lang.Math.subtractExact(a, b)),
       ArithmeticBinOps.Mul -> checkedIntIntToInt((a, b) => java.lang.Math.multiplyExact(a, b)),
       IntDivBinOp -> checkedIntDiv,
+      IntDivBinOp -> checkedIntIntToInt((a, b) => a % b),
       RealDivBinOp -> intRealDivToReal,
 
       EqualityBinOps.Equal -> intIntToBool(_ == _),
@@ -48,36 +49,36 @@ private[TypeSystem] object IntegerBinOpRules {
 
   private def checkedIntDiv: BinOpRules.Rule =
     BinOpRules.Rule(BuiltInType.IntegerT, {
-      case (Value.IntegerValue(_), Value.IntegerValue(0)) => Left(OpEvalErr.DivisionByZero)
+      case (Value.IntegerValue(_), Value.IntegerValue(0))             => Left(OpEvalErr.DivisionByZero)
       case (Value.IntegerValue(Int.MinValue), Value.IntegerValue(-1)) => Left(OpEvalErr.IntegerOverflow)
-      case (Value.IntegerValue(a), Value.IntegerValue(b)) => Right(Value.IntegerValue(a / b))
-      case _ => Left(OpEvalErr.UnsupportedOperation)
+      case (Value.IntegerValue(a), Value.IntegerValue(b))             => Right(Value.IntegerValue(a / b))
+      case _                                                          => Left(OpEvalErr.UnsupportedOperation)
     })
 
   private def intIntToBool(f: (Int, Int) => Boolean): BinOpRules.Rule =
     BinOpRules.Rule(BuiltInType.BooleanT, {
       case (Value.IntegerValue(a), Value.IntegerValue(b)) => Right(Value.BooleanValue(f(a, b)))
-      case _ => Left(OpEvalErr.UnsupportedOperation)
+      case _                                              => Left(OpEvalErr.UnsupportedOperation)
     })
 
   private def intRealToReal(f: (Int, Double) => Double): BinOpRules.Rule =
     BinOpRules.Rule(BuiltInType.RealT, {
       case (Value.IntegerValue(a), Value.RealValue(b)) => checkedRealResult(f(a, b))
-      case _ => Left(OpEvalErr.UnsupportedOperation)
+      case _                                           => Left(OpEvalErr.UnsupportedOperation)
     })
 
   private def intRealDivToReal: BinOpRules.Rule =
     BinOpRules.Rule(BuiltInType.RealT, {
-      case (Value.IntegerValue(_), Value.RealValue(0.0)) => Left(OpEvalErr.DivisionByZero)
-      case (Value.IntegerValue(a), Value.RealValue(b)) => checkedRealResult(a.toDouble / b)
+      case (Value.IntegerValue(_), Value.RealValue(0.0))  => Left(OpEvalErr.DivisionByZero)
+      case (Value.IntegerValue(a), Value.RealValue(b))    => checkedRealResult(a.toDouble / b)
       case (Value.IntegerValue(a), Value.IntegerValue(b)) => checkedRealResult(a.toDouble / b.toDouble)
-      case _ => Left(OpEvalErr.UnsupportedOperation)
+      case _                                              => Left(OpEvalErr.UnsupportedOperation)
     })
 
   private def intRealToBool(f: (Int, Double) => Boolean): BinOpRules.Rule =
     BinOpRules.Rule(BuiltInType.BooleanT, {
       case (Value.IntegerValue(a), Value.RealValue(b)) => Right(Value.BooleanValue(f(a, b)))
-      case _ => Left(OpEvalErr.UnsupportedOperation)
+      case _                                           => Left(OpEvalErr.UnsupportedOperation)
     })
 
   private def checkedRealResult(value: Double): Either[OpEvalErr, Value] =

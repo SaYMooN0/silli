@@ -7,22 +7,14 @@ import SemanticAnalyzer.*
 import TypeSystem.Value
 
 object StdLib {
-  private val procedureFactories: List[ProcedureId => StdProcedure] = List(
-    procedures.StdPrint
+  private val procedureFactories: Seq[ProcedureId => StdProcedure] = List(
+    procedures.StdPrintString,
+    procedures.StdPrintLine
   )
 
-  private val functionFactories: List[FunctionId => StdFunction] = List(
-    functions.StdConvertIntegerToString,
-    functions.StdConvertRealToString,
-    functions.StdConvertBooleanToString,
-
-    functions.StdConvertBooleanToInteger,
-    functions.StdConvertIntegerToBoolean,
-    functions.StdConvertStringToInteger,
-    functions.StdConvertStringToReal,
-
-    functions.StdCanConvertStringToInteger,
-    functions.StdCanConvertStringToReal,
+  private val functionFactories: Seq[FunctionId => StdFunction] = List(
+    functions.StdReadLine,
+    functions.StdReadSingleCharAsAsciiCode,
 
     functions.StdStringLength,
     functions.StdStringIndexOf,
@@ -34,8 +26,15 @@ object StdLib {
     functions.StdStringRepeat,
     functions.StdStringFromAsciiCode,
     functions.StdAsciiCodeFromString,
+    functions.StdStringConcat,
+    functions.StdStringSubstring,
 
-    functions.StdRead
+    functions.StdConvertIntegerToString,
+    functions.StdConvertRealToString,
+    functions.StdConvertBooleanToString,
+    functions.StdRoundRealToInt,
+    functions.StdCeilRealToInt,
+    functions.StdFloorRealToInt
   )
 
   private val proceduresById: Map[ProcedureId, StdProcedure] =

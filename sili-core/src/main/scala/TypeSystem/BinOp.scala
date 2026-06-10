@@ -5,6 +5,7 @@ type BinOp =
   ArithmeticBinOps
     | RealDivBinOp.type
     | IntDivBinOp.type
+    | ModBinOp.type
     | EqualityBinOps
     | ComparisonBinOps
     | LogicBinOps
@@ -18,6 +19,8 @@ enum ArithmeticBinOps() {
 case object RealDivBinOp
 
 case object IntDivBinOp
+
+case object ModBinOp
 
 
 enum EqualityBinOps {

@@ -31,7 +31,7 @@ lazy val siliCli = (project in file("sili-cli"))
   .settings(commonSettings)
   .settings(
     name := "sili-cli",
-    Compile / mainClass := Some("sili.cli.Main"),
+    Compile / mainClass := Some("Main"),
 
     copyPascalProgram := {
       val rootDir = (LocalRootProject / baseDirectory).value

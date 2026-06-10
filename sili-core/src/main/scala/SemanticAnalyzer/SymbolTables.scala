@@ -35,6 +35,7 @@ private object BuiltinsScopeSymbolTable {
       Ident(TypeSymbol.StringSym.spec.name) -> TypeSymbol.StringSym
     )
       ++ StdLib.StdLib.procedureSymbolsByName
+      ++ StdLib.StdLib.functionSymbolsByName
   )
 }
 

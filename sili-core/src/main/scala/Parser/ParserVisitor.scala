@@ -261,6 +261,7 @@ private def parseMulExpr(): Parser[AstExpr] = parseBinOpChain(
     case OpToken.Mul     => Some(TypeSystem.ArithmeticBinOps.Mul)
     case OpToken.RealDiv => Some(TypeSystem.RealDivBinOp)
     case OpToken.Div     => Some(TypeSystem.IntDivBinOp)
+    case OpToken.Mod     => Some(TypeSystem.ModBinOp)
     case _               => None
   })
 
@@ -385,7 +386,7 @@ private def parseStmtsListTailTillEndKw(gathered: List[AstStmt], isDividerExpect
     }
   }
 
-private def parseBinOpChain(partParser: () => Parser[AstExpr], mapTokenToOp: Token => Option[TypeSystem.BinOp]) = for {
+private def parseBinOpChain(partParser: () => Parser[AstExpr], mapTokenToOp: OpToken => Option[TypeSystem.BinOp]) = for {
   left <- partParser()
   result <- parseBinOpChainTail(left, partParser, mapTokenToOp)
 } yield result
@@ -393,20 +394,20 @@ private def parseBinOpChain(partParser: () => Parser[AstExpr], mapTokenToOp: Tok
 private def parseBinOpChainTail(
                                  left: AstExpr,
                                  partParser: () => Parser[AstExpr],
-                                 mapTokenToOp: Token => Option[TypeSystem.BinOp]
+                                 mapTokenToOp: OpToken => Option[TypeSystem.BinOp]
                                ): Parser[AstExpr] =
-  Parser.cur.flatMap { opToken =>
-    mapTokenToOp(opToken.token) match {
+  Parser.cur.flatMap {
+    case TokenWithLoc(token: OpToken, loc) => mapTokenToOp(token) match {
       case None     => Parser.succeed(left)
       case Some(op) => for {
-        _ <- Parser.eatToken(opToken.token)
+        _ <- Parser.eatToken(token)
         right <- partParser()
-        node = AstExpr.BinOp(left, right, (op, opToken.loc), Loc(left.loc.start, right.loc.end))
+        node = AstExpr.BinOp(left, right, (op, loc), Loc(left.loc.start, right.loc.end))
         result <- parseBinOpChainTail(node, partParser, mapTokenToOp)
       } yield result
     }
+    case nonOpToken                        => Parser.succeed(left)
   }
-
 
 private def parseCallParamsList(): Parser[List[AstExpr]] = Parser.cur.flatMap { cur =>
   cur.token match {

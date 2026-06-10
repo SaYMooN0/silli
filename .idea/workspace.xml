@@ -4,15 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="29f6f16f-f3c1-4bcc-8021-b7d090301358" name="Changes" comment="Updated parser and semantic analyzer to work with functions">
+    <list default="true" id="29f6f16f-f3c1-4bcc-8021-b7d090301358" name="Changes" comment="Small code refactor and cleanup">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-cli/src/main/scala/Main.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-cli/src/main/scala/Main.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/IOCtx.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/IOCtx.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/Interpreter.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Interpreter/Interpreter.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/ParserVisitor.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/Parser/ParserVisitor.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/StdLib.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/StdLib.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/functions/StdReadLine.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/functions/StdReadLine.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/procedures/Print.scala" beforeDir="false" afterPath="$PROJECT_DIR$/sili-core/src/main/scala/StdLib/procedures/Print.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -235,7 +228,7 @@
       <workItem from="1780692917723" duration="10329000" />
       <workItem from="1780779350706" duration="19108000" />
       <workItem from="1780958067869" duration="6086000" />
-      <workItem from="1781027659865" duration="5515000" />
+      <workItem from="1781027659865" duration="6825000" />
     </task>
     <task id="LOCAL-00001" summary="Updated parser and semantic analyzer to work with functions">
       <option name="closed" value="true" />
@@ -245,7 +238,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780852982289</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Small code refactor and cleanup">
+      <option name="closed" value="true" />
+      <created>1781038009966</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1781038009966</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -264,7 +265,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Updated parser and semantic analyzer to work with functions" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated parser and semantic analyzer to work with functions" />
+    <MESSAGE value="Small code refactor and cleanup" />
+    <option name="LAST_COMMIT_MESSAGE" value="Small code refactor and cleanup" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

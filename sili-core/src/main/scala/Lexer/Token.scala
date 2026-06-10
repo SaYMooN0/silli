@@ -53,6 +53,7 @@ enum OpToken {
   //div
   case RealDiv // /
   case Div //div keyword
+  case Mod //mod keyword
 
   // comparison
   case Equal // =
@@ -84,11 +85,7 @@ enum DeclarationKeywordToken {
 }
 
 type Keyword =
-  OpToken.Div.type
-    | OpToken.Not.type
-    | OpToken.And.type
-    | OpToken.Or.type
-    | OpToken.Xor.type
+  OpToken
     | SyntaxKeywordToken
     | DeclarationKeywordToken
     | BuiltInTypeNameToken
@@ -97,6 +94,7 @@ type Keyword =
 def mapToKeyword(str: String): Option[Keyword] = str match {
   //OpToken
   case "div" => Some(OpToken.Div)
+  case "mod" => Some(OpToken.Mod)
   case "not" => Some(OpToken.Not)
   case "and" => Some(OpToken.And)
   case "or"  => Some(OpToken.Or)

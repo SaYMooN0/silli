@@ -2,7 +2,7 @@ package Interpreter
 
 import Lexer.Loc
 import SemanticAnalyzer.*
-import TypeSystem.Value
+import TypeSystem.{Value, coerceValueTo}
 
 import java.io.Reader
 
@@ -78,11 +78,20 @@ private def interpretCompoundStmt(compoundStmt: StmtBoundAstNode.CompoundStmt): 
 
 private def interpretAssignStmt(assignStmt: StmtBoundAstNode.AssignStmt): InterpreterRuntime[Unit] = {
   for {
-    value <- interpretExpr(assignStmt.typedExpr.expr)
+    rawValue <- interpretExpr(assignStmt.typedExpr.expr)
+
+    coercedValue = coerceValueTo(
+      rawValue,
+      assignStmt.valueSymbol.typeSym
+    )
+
     _ <- InterpreterRuntime.callstack.flatMap { callstack =>
       fromCallstackResult(
-        callstack.setVariable(assignStmt.valueSymbol.name, value),
-        assignStmt.loc
+        callstack.setVariable(assignStmt.valueSymbol.name, coercedValue),
+        assignStmt.valueSymbol.declOrigin match {
+          case UserDeclOrigin(declLoc) => declLoc
+          case BuiltinDeclOrigin       => throw new Error("Cannot assign variable not declared by user")
+        }
       )
     }
   } yield ()
@@ -106,7 +115,7 @@ private def interpretIfStmt(ifStmt: StmtBoundAstNode.IfStmt): InterpreterRuntime
 
 private def interpretProcCallStmt(procCallStmt: StmtBoundAstNode.ProcCall): InterpreterRuntime[Unit] = {
   for {
-    actualParamValues <- interpretActualParamValues(procCallStmt.actualParams)
+    actualParamValues <- interpretActualParamValues(procCallStmt.actualParams, procCallStmt.procSym.formalParams)
     _ <- procCallStmt.procSym.decl match {
       case BuiltinDeclOrigin => InterpreterRuntime.callStdLibProcedure(procCallStmt.procSym, actualParamValues, procCallStmt.loc)
       case UserDeclOrigin(_) => interpretUserProcCall(procCallStmt.procSym, actualParamValues, procCallStmt.loc)
@@ -148,7 +157,7 @@ private def interpretVarRefExpr(expr: ExprBoundAstNode.VarRef): InterpreterRunti
 
 private def interpretFuncCallExpr(funcCallExpr: ExprBoundAstNode.FuncCall): InterpreterRuntime[Value] = {
   for {
-    actualParamValues <- interpretActualParamValues(funcCallExpr.actualParams)
+    actualParamValues <- interpretActualParamValues(funcCallExpr.actualParams, funcCallExpr.funcSym.formalParams)
     result <- funcCallExpr.funcSym.decl match {
       case BuiltinDeclOrigin => InterpreterRuntime.callStdLibFunction(funcCallExpr.funcSym, actualParamValues, funcCallExpr.loc)
       case UserDeclOrigin(_) => interpretUserFuncCall(funcCallExpr.funcSym, actualParamValues, funcCallExpr.loc)
@@ -161,10 +170,7 @@ private def interpretUserFuncCall(
                                    actualParamValues: List[Value],
                                    callLoc: Loc
                                  ): InterpreterRuntime[Value] = {
-  withEnteredUserCall(
-    enter = _.enterFuncCall(funcSym, actualParamValues),
-    callLoc = callLoc
-  ) { funcDecl =>
+  withEnteredUserCall(_.enterFuncCall(funcSym, actualParamValues), callLoc) { funcDecl =>
     for {
       _ <- interpretBlock(funcDecl.block)
       result <- InterpreterRuntime.callstack.flatMap { callstack =>
@@ -172,13 +178,8 @@ private def interpretUserFuncCall(
           callstack.getVariable(FuncResultSymbol.ResultIdent),
           callLoc
         ).flatMap {
-          case ValueOrUndefined.Value(value) =>
-            InterpreterRuntime.pure(value)
-
-          case ValueOrUndefined.Undefined =>
-            InterpreterRuntime.fail(
-              RuntimeErr.UndefinedVariableAccess(callLoc, FuncResultSymbol.ResultIdent)
-            )
+          case ValueOrUndefined.Value(value) => InterpreterRuntime.pure(value)
+          case ValueOrUndefined.Undefined    => InterpreterRuntime.fail(RuntimeErr.UndefinedVariableAccess(callLoc, FuncResultSymbol.ResultIdent))
         }
       }
     } yield result
@@ -197,10 +198,11 @@ private def interpretBinOpExpr(expr: ExprBoundAstNode.BinOp): InterpreterRuntime
   left <- interpretExpr(expr.left)
   right <- interpretExpr(expr.right)
   result <- TypeSystem.BinOpRules.applyOp(left, expr.op, right) match {
-    case Right(res) => InterpreterRuntime.pure(res)
-    case Left(err)  => failFromOpEvalErr(expr.loc, err)
+    case Right(res) =>       InterpreterRuntime.pure(res)
+    case Left(err) => failFromOpEvalErr(expr.loc, err)
   }
 } yield result
+
 
 //helpers
 private def withEnteredUserCall[D, A](
@@ -221,16 +223,21 @@ private def withEnteredUserCall[D, A](
   } yield result
 }
 
-private def interpretActualParamValues(actualParams: List[AnyTypedExpr]): InterpreterRuntime[List[Value]] = {
-  actualParams.foldLeft(InterpreterRuntime.pure(List.empty[Value])) {
-    (acc, typedExpr) =>
-      for {
-        values <- acc
-        value <- interpretExpr(typedExpr.expr)
-      } yield values :+ value
-  }
+private def interpretActualParamValues(
+                                        actualParams: List[AnyTypedExpr],
+                                        formalParams: List[ParamSymbol]
+                                      ): InterpreterRuntime[List[Value]] = {
+  formalParams
+    .zip(actualParams)
+    .foldLeft(InterpreterRuntime.pure(List.empty[Value])) {
+      case (acc, (formalParam, actualParam)) =>
+        for {
+          values <- acc
+          rawValue <- interpretExpr(actualParam.expr)
+          coercedValue = coerceValueTo(rawValue, formalParam.typeSym)
+        } yield values :+ coercedValue
+    }
 }
-
 private def fromCallstackResult[A](result: Either[CallstackErr, A], loc: Loc): InterpreterRuntime[A] = {
   result match {
     case Right(value) => InterpreterRuntime.pure(value)
